@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script>
+        if (!localStorage.getItem('currentUserId')) { window.location.replace('login.html'); }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sell Gmail - AMAR TASK</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'SF Pro Display',-apple-system,BlinkMacSystemFont,Roboto,sans-serif; }
+        body { background-color: #f8fafc; color: #1e293b; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* --- ইন-অ্যাপ টোস্ট অ্যালার্ট --- */
+        #app-toast-alert { 
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%); 
+            width: calc(100% - 40px); max-width: 360px; background: rgba(15, 23, 42, 0.95); 
+            backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); 
+            padding: 14px 20px; border-radius: 18px; display: flex; align-items: center; 
+            gap: 12px; box-shadow: 0 20px 30px rgba(0,0,0,0.25); z-index: 200000; 
+            transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        #app-toast-alert.show { top: 20px; }
+        #toast-alert-icon { font-size: 18px; }
+        #toast-alert-msg { font-size: 13px; font-weight: 700; color: #ffffff; line-height: 1.4; }
+
+        /* --- হেডার বার --- */
+        .top-nav-bar { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: #fff; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; }
+        .back-btn { background: #f1f5f9; border: none; color: #1e293b; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .back-btn:active { transform: scale(0.9); }
+        .nav-title { font-size: 16px; font-weight: 800; color: #0f172a; }
+        .nav-right-placeholder { width: 38px; }
+
+        /* --- মেইন স্ক্রোল এরিয়া --- */
+        .content-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px; }
+        .content-area::-webkit-scrollbar { display: none; }
+
+        /* --- ভিডিও টিউটোরিয়াল ও টেক্সট সেকশন --- */
+        .video-tutorial-card { background: white; border-radius: 24px; padding: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 12px; }
+        .video-wrapper { width: 100%; height: 180px; background: #0f172a; border-radius: 16px; overflow: hidden; position: relative; }
+        .tutorial-text-notice { font-size: 12px; font-weight: 600; color: #475569; line-height: 1.5; background: #f8fafc; padding: 10px 14px; border-radius: 12px; border-left: 4px solid #e11d48; }
+
+        /* --- লাইভ রেট কার্ড --- */
+        .rate-card { background: linear-gradient(135deg, #e11d48, #9f1239); border-radius: 24px; padding: 18px; color: white; box-shadow: 0 10px 20px rgba(225, 29, 72, 0.15); text-align: center; }
+        .rate-card i { font-size: 24px; margin-bottom: 6px; opacity: 0.9; }
+        .rate-card h2 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+        .rate-card p { font-size: 11px; opacity: 0.85; font-weight: 600; }
+
+        /* --- টুデー পাসওয়ার্ড শো বক্স --- */
+        .admin-pass-notice-card { background: #fff3f5; border: 1px dashed #fecaca; border-radius: 20px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.01); }
+        .pass-notice-left { display: flex; flex-direction: column; gap: 3px; }
+        .pass-notice-left span { font-size: 10px; font-weight: 800; color: #e11d48; letter-spacing: 0.5px; }
+        .pass-notice-left h4 { font-size: 14px; font-weight: 700; color: #1e293b; }
+        .pass-copy-btn { background: #fff; border: 1px solid #fecaca; color: #e11d48; padding: 8px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .pass-copy-btn:active { transform: scale(0.9); background: #ffe4e6; }
+
+        /* --- জিমেইল বাই অফ থাকলে এই নোটিশ বক্স দেখাবে --- */
+        .buy-off-notice-card { display: none; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 24px; padding: 30px 20px; text-align: center; flex-direction: column; align-items: center; gap: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01); }
+        .buy-off-notice-card i { font-size: 40px; color: #d97706; }
+        .buy-off-notice-card h4 { font-size: 16px; font-weight: 800; color: #92400e; }
+        .buy-off-notice-card p { font-size: 12px; color: #b45309; font-weight: 600; }
+
+        /* --- ইনপুট ফরম --- */
+        .sell-form-card { background: white; border-radius: 24px; padding: 20px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 12px; font-weight: 700; color: #64748b; padding-left: 4px; }
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-wrapper i.field-icon { position: absolute; left: 16px; color: #94a3b8; font-size: 14px; }
+        .input-wrapper input { width: 100%; padding: 14px 16px 14px 44px; border-radius: 14px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; font-weight: 600; background: #f8fafc; transition: 0.2s; }
+        .input-wrapper input:focus { border-color: #e11d48; background: #fff; box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.08); }
+        
+        .submit-btn { background: linear-gradient(135deg, #e11d48, #be123c); color: white; border: none; padding: 15px; border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25); display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .submit-btn:active { transform: scale(0.97); }
+
+        /* --- হিস্ট্রি সেকশন --- */
+        .history-section-title { font-size: 14px; font-weight: 800; color: #475569; margin-top: 5px; display: flex; align-items: center; gap: 6px; }
+        .history-container { display: flex; flex-direction: column; gap: 12px; }
+        
+        .history-card { background: white; border-radius: 18px; padding: 14px 16px; border: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.01); }
+        .h-left { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1; padding-right: 10px; }
+        
+        .copy-row { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0; width: 100%; }
+        .h-email { font-size: 12px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%; }
+        .h-pass { font-size: 11px; font-weight: 600; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%; }
+        
+        .copy-icon { color: #94a3b8; cursor: pointer; font-size: 12px; transition: 0.2s; padding: 2px; }
+        .copy-icon:active { transform: scale(0.85); color: #e11d48; }
+        
+        .h-date { font-size: 10px; color: #94a3b8; font-weight: 500; padding-left: 2px; }
+        
+        .h-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; justify-content: center; }
+        .h-price { font-size: 13px; font-weight: 800; color: #e11d48; }
+        
+        .status-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 8px; text-transform: capitalize; }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-success { background: #dcfce7; color: #15803d; }
+        .status-rejected { background: #fee2e2; color: #b91c1c; }
+
+        .no-data { text-align: center; color: #94a3b8; font-size: 12px; font-weight: 600; padding: 30px 0; }
+        
+        #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(6px); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 99999; }
+        .premium-spinner { width: 44px; height: 44px; border: 4px solid #e2e8f0; border-top: 4px solid #e11d48; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="app-toast-alert">
+        <i id="toast-alert-icon" class="fa-solid"></i>
+        <div id="toast-alert-msg"></div>
+    </div>
+
+    <div id="loader-overlay"><div class="premium-spinner"></div></div>
+
+    <div class="top-nav-bar">
+        <button class="back-btn" onclick="window.location.href='home.html'"><i class="fa-solid fa-arrow-left"></i></button>
+        <span class="nav-title">Sell Gmail Accounts</span>
+        <div class="nav-right-placeholder"></div>
+    </div>
+
+    <div class="content-area">
+        
+        <div class="video-tutorial-card">
+            <div class="video-wrapper">
+                <iframe width="100%" height="100%" src="https://www.youtube.com/embed/YOUR_VIDEO_ID" frameborder="0" allowfullscreen></iframe>
+            </div>
+            <div class="tutorial-text-notice">
+                নিয়ম মেনে সঠিক জিমেইল অ্যাকাউন্ট সাবমিট করুন। ভুল বা ফেক তথ্য দিলে অ্যাকাউন্ট রিজেক্ট করা হবে এবং পেমেন্ট পাবেন না।
+            </div>
+        </div>
+        
+        <div class="rate-card" id="rate-display-card">
+            <i class="fa-solid fa-circle-dollar-to-slot"></i>
+            <h2 id="live-gmail-rate">৳ 0.00</h2>
+            <p>Current Live Payout Rate Per Gmail</p>
+        </div>
+
+        <div class="admin-pass-notice-card" id="pass-display-card">
+            <div class="pass-notice-left">
+                <span>TODAY'S REQUIRED PASSWORD</span>
+                <h4 id="today-gmail-password">Loading...</h4>
+            </div>
+            <button class="pass-copy-btn" id="btn-copy-admin-pass">
+                <i class="fa-regular fa-copy"></i> Copy
+            </button>
+        </div>
+
+        <div class="buy-off-notice-card" id="gmail-off-notice">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <h4>আজকে আমরা জিমেইল বাই করছি না</h4>
+            <p>পরবর্তী আপডেটের জন্য অপেক্ষা করুন অথবা এডমিনের সাথে যোগাযোগ করুন।</p>
+        </div>
+
+        <div class="sell-form-card" id="gmail-submit-form">
+            <div class="form-group">
+                <label>GMAIL ADDRESS</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-envelope field-icon"></i>
+                    <input type="email" id="gmail-username" placeholder="example@gmail.com" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>GMAIL PASSWORD</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-lock field-icon"></i>
+                    <input type="text" id="gmail-password" placeholder="Enter password" required>
+                </div>
+            </div>
+            <button class="submit-btn" id="btn-submit-gmail">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Submit Account
+            </button>
+        </div>
+
+        <h3 class="history-section-title"><i class="fa-solid fa-clock-rotate-left"></i> Submission History</h3>
+        <div class="history-container" id="gmail-history-box">
+            <div class="no-data">Loading history...</div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, collection, addDoc, query, where, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbyV4futjEJjdAbR3dMNf6dOIhAuj7tTo",
+            authDomain: "task-2503d.firebaseapp.com",
+            projectId: "task-2503d",
+            appId: "1:707479242322:web:492db72a3b86653a0d018b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const userId = localStorage.getItem('currentUserId');
+        const loader = document.getElementById('loader-overlay');
+        const historyBox = document.getElementById('gmail-history-box');
+
+        let currentGmailPrice = 0.00;
+        let adminRequiredPass = "";
+
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('app-toast-alert');
+            const toastMsg = document.getElementById('toast-alert-msg');
+            const toastIcon = document.getElementById('toast-alert-icon');
+            
+            toastMsg.innerText = message;
+            if(type === "success") {
+                toastIcon.className = "fa-solid fa-circle-check";
+                toastIcon.style.color = "#22c55e";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-exclamation";
+                toastIcon.style.color = "#ef4444";
+            }
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 2000);
+        }
+
+        window.copyToClipboard = (text, typeLabel) => {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`${typeLabel} Copied!`, "success");
+            });
+        };
+
+        document.getElementById('btn-copy-admin-pass').onclick = () => {
+            if(adminRequiredPass) {
+                copyToClipboard(adminRequiredPass, "Required Password");
+            }
+        };
+
+        // --- ইমেইল মাস্কিং বা ফরম্যাটিং ইঞ্জিন (Jemon: md*****5@gmail.com) ---
+        function maskEmail(email) {
+            if (!email || !email.includes('@')) return email;
+            const parts = email.split('@');
+            const mainName = parts[0];
+            const domain = parts[1];
+            
+            if (mainName.length <= 3) {
+                return mainName[0] + "*****" + "@" + domain;
+            }
+            
+            const firstTwo = mainName.substring(0, 2);
+            const lastOne = mainName.substring(mainName.length - 1);
+            return firstTwo + "*****" + lastOne + "@" + domain;
+        }
+
+        // --- অ্যাডমিন কনфিগ লাইভ লিসেনার ---
+        function listenLiveConfig() {
+            onSnapshot(doc(db, "settings", "app_config"), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    const buyStatus = data.gmail_buy_status || "on";
+                    const formCard = document.getElementById('gmail-submit-form');
+                    const noticeCard = document.getElementById('gmail-off-notice');
+                    const passCard = document.getElementById('pass-display-card');
+                    const rateCard = document.getElementById('rate-display-card');
+
+                    if(buyStatus === "off") {
+                        formCard.style.display = "none";
+                        passCard.style.display = "none";
+                        rateCard.style.display = "none";
+                        noticeCard.style.display = "flex";
+                    } else {
+                        formCard.style.display = "flex";
+                        passCard.style.display = "flex";
+                        rateCard.style.display = "flex";
+                        noticeCard.style.display = "none";
+                    }
+
+                    currentGmailPrice = parseFloat(data.gmail_rate || 0);
+                    document.getElementById('live-gmail-rate').innerText = `৳ ${currentGmailPrice.toFixed(2)}`;
+                    
+                    adminRequiredPass = data.gmail_required_pass || "Not Set Yet";
+                    document.getElementById('today-gmail-password').innerText = adminRequiredPass;
+                }
+            });
+        }
+
+        // --- অফলাইন ডেটা রেন্ডারিং ইঞ্জিন ---
+        function renderHistoryList(historyData) {
+            if (!historyData || historyData.length === 0) {
+                historyBox.innerHTML = '<div class="no-data">You haven\'t submitted any Gmail yet.</div>';
+                return;
+            }
+
+            historyBox.innerHTML = '';
+            historyData.forEach((data) => {
+                let dateStr = "Just now";
+                if(data.submittedAtMs) {
+                    const d = new Date(data.submittedAtMs);
+                    dateStr = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ", " + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                }
+
+                // ইউজার দেখবে স্টার মার্ক করা ইমেইল, কিন্তু কপিতে যাবে রিয়েল পুরো ইমেইল
+                const maskedUserEmail = maskEmail(data.email);
+
+                const html = `
+                    <div class="history-card">
+                        <div class="h-left">
+                            <div class="copy-row">
+                                <span class="h-email">${maskedUserEmail}</span>
+                                <i class="fa-regular fa-copy copy-icon" onclick="copyToClipboard('${data.email}', 'Email')"></i>
+                            </div>
+                            <div class="copy-row">
+                                <span class="h-pass">Pass: ${data.password}</span>
+                                <i class="fa-regular fa-copy copy-icon" onclick="copyToClipboard('${data.password}', 'Password')"></i>
+                            </div>
+                            <span class="h-date">${dateStr}</span>
+                        </div>
+                        <div class="h-right">
+                            <span class="h-price">৳${parseFloat(data.rateAtSubmission || 0).toFixed(2)}</span>
+                            <span class="status-badge status-${data.status}">${data.status}</span>
+                        </div>
+                    </div>`;
+                historyBox.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // --- ইনস্ট্যান্ট লোডিং জিমেইল হিস্ট্রি ইঞ্জিন (Offline Cache Support) ---
+        function listenSubmissionHistory() {
+            if (!userId) return;
+
+            // ১. ফাস্ট লোড: লোকাল স্টোরেজে আগের সেভ করা ডেটা থাকলে তা সাথে সাথে রেন্ডার করবে
+            const cachedData = localStorage.getItem(`cache_gmail_history_${userId}`);
+            if (cachedData) {
+                try {
+                    renderHistoryList(JSON.parse(cachedData));
+                } catch (e) { console.error("Cache parse error", e); }
+            }
+            
+            const q = query(
+                collection(db, "gmail_submissions"), 
+                where("userId", "==", userId)
+            );
+
+            // ২. ব্যাকগ্রাউন্ডে ফায়ারবেস থেকে রিয়েলটাইম সিঙ্ক হবে
+            onSnapshot(q, (querySnapshot) => {
+                let historyData = [];
+                querySnapshot.forEach((doc) => {
+                    const docData = doc.data();
+                    // Timestamp কে মিলিসেকেন্ডে কনভার্ট করছি লোকাল ক্যাশিং সুবিধার জন্য
+                    const ms = docData.submittedAt ? docData.submittedAt.toMillis() : Date.now();
+                    historyData.push({ 
+                        id: doc.id, 
+                        ...docData,
+                        submittedAtMs: ms
+                    });
+                });
+
+                // টাইম শর্টিং (সর্বশেষ ডাটা সবার উপরে)
+                historyData.sort((a, b) => b.submittedAtMs - a.submittedAtMs);
+
+                // ৩. নতুন ডাটা লোকাল স্টোরেজে অফলাইন ব্যবহারের জন্য আপডেট সেভ করে রাখছে
+                localStorage.setItem(`cache_gmail_history_${userId}`, JSON.stringify(historyData));
+
+                // ৪. স্ক্রিনে ডাটা রেন্ডার বা শো করা হচ্ছে
+                renderHistoryList(historyData);
+
+            }, (error) => {
+                console.error("Firestore history tracking error:", error);
+                if (!localStorage.getItem(`cache_gmail_history_${userId}`)) {
+                    historyBox.innerHTML = '<div class="no-data">Error loading history.</div>';
+                }
+            });
+        }
+
+        document.getElementById('btn-submit-gmail').onclick = async () => {
+            const emailInput = document.getElementById('gmail-username').value.trim();
+            const passInput = document.getElementById('gmail-password').value.trim();
+
+            if (!emailInput || !passInput) {
+                showToast("Please fill up both fields!", "error");
+                return;
+            }
+
+            if (!emailInput.includes("@gmail.com")) {
+                showToast("Please enter a valid Gmail address!", "error");
+                return;
+            }
+
+            loader.style.display = 'flex';
+
+            try {
+                await addDoc(collection(db, "gmail_submissions"), {
+                    userId: userId,
+                    email: emailInput,
+                    password: passInput,
+                    status: "pending", 
+                    rateAtSubmission: currentGmailPrice, 
+                    submittedAt: serverTimestamp()
+                });
+
+                showToast("Submitted successfully!", "success");
+                
+                document.getElementById('gmail-username').value = '';
+                document.getElementById('gmail-password').value = '';
+
+            } catch (e) {
+                showToast("Something went wrong!", "error");
+            } finally {
+                loader.style.display = 'none';
+            }
+        };
+
+        listenLiveConfig();
+        listenSubmissionHistory();
+    </script>
+</body>
+</html>

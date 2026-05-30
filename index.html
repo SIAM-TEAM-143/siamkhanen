@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AMAR TASK - Earning Network</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #00e676;
+            --primary-glow: rgba(0, 230, 118, 0.12);
+            --cyber-blue: #00b0ff;
+            --dark-deep: #060b13;
+            --dark-card: #0d1527;
+            --dark-card-glow: rgba(13, 21, 39, 0.7);
+            --slate-light: #94a3b8;
+            --border-alpha: rgba(255, 255, 255, 0.05);
+            --neon-border: rgba(0, 230, 118, 0.2);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif; 
+            background: var(--dark-deep); 
+            color: #f8fafc; 
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ---  Cyber Neon Loader Pipeline --- */
+        #intro-screen {
+            position: fixed; inset: 0; z-index: 100000;
+            background: radial-gradient(circle at center, #0a1220, var(--dark-deep));
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 1; visibility: visible;
+            transition: opacity 0.6s ease, visibility 0.6s ease, transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        .loader-hub { position: relative; display: flex; flex-direction: column; align-items: center; }
+        .loader-brand-circle {
+            position: relative; width: 100px; height: 100px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        }
+        .loader-brand-img {
+            width: 84px; height: 84px; border-radius: 50%; object-fit: cover;
+            border: 2px solid var(--primary); box-shadow: 0 0 25px var(--primary);
+        }
+        .scanner-line {
+            position: absolute; width: 115px; height: 115px;
+            border: 2px solid transparent; border-top-color: var(--primary);
+            border-radius: 50%; animation: spinNode 1.2s linear infinite;
+        }
+        .loader-pct { font-size: 32px; font-weight: 800; color: #ffffff; margin-top: 25px; font-family: sans-serif; }
+        .progress-container { width: 150px; height: 4px; background: rgba(255,255,255,0.06); border-radius: 100px; margin-top: 15px; overflow: hidden; position: relative; }
+        .progress-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--cyber-blue)); box-shadow: 0 0 15px var(--primary); transition: width 0.06s linear; }
+        .status-msg { margin-top: 14px; color: #475569; font-size: 11px; text-transform: uppercase; letter-spacing: 3px; font-weight: 600; }
+
+        @keyframes spinNode { 100% { transform: rotate(360deg); } }
+
+        /* --- App Reveal --- */
+        #main-app { opacity: 0; transform: translateY(10px); transition: opacity 0.5s ease, transform 0.5s ease; }
+        .app-visible { opacity: 1 !important; transform: translateY(0) !important; }
+
+        /* --- High-Style Header --- */
+        .header {
+            position: sticky; top: 0; z-index: 2000;
+            background: rgba(6, 11, 19, 0.75); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border-alpha);
+        }
+        .brand-link { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .brand-logo-img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); padding: 1px; box-shadow: 0 0 15px rgba(0, 230, 118, 0.3); }
+        .brand-title { font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; }
+        .brand-title span { background: linear-gradient(135deg, var(--primary), var(--cyber-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* --- Cyber Hero Dashboard --- */
+        .hero-dashboard { padding: 45px 20px 30px 20px; text-align: center; background: radial-gradient(120% 60% at 50% 0%, rgba(0, 230, 118, 0.08), transparent); }
+        
+        .live-tag { display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.03); color: #ffffff; padding: 8px 16px; border-radius: 100px; font-size: 11.5px; font-weight: 600; margin-bottom: 20px; border: 1px solid var(--border-alpha); backdrop-filter: blur(5px); }
+        .live-tag span { width: 7px; height: 7px; background: #ff1744; border-radius: 50%; display: inline-block; position: relative; }
+        .live-tag span::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: #ff1744; opacity: 0.5; animation: pulseRing 1.5s infinite; }
+        .live-tag b { color: var(--primary); font-family: sans-serif; margin-right: 2px; }
+
+        .hero-dashboard h1 { font-size: 30px; line-height: 1.35; margin-bottom: 14px; font-weight: 800; color: #ffffff; letter-spacing: -0.8px; }
+        .hero-dashboard h1 span { background: linear-gradient(135deg, var(--primary), var(--cyber-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-dashboard p { color: var(--slate-light); font-size: 14px; line-height: 1.6; max-width: 410px; margin: 0 auto 26px auto; }
+        
+        .action-cta-btn {
+            background: linear-gradient(135deg, var(--primary), var(--cyber-blue));
+            color: #060b13; padding: 16px 38px; border-radius: 18px;
+            text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; gap: 10px; font-size: 15px;
+            box-shadow: 0 10px 30px rgba(0, 230, 118, 0.3); transition: transform 0.2s;
+        }
+        .action-cta-btn:active { transform: scale(0.96); }
+
+        @keyframes pulseRing { 100% { transform: scale(2.5); opacity: 0; } }
+
+        /* ---  Cyber Urgency Task Limit Box --- */
+        .urgency-box { background: rgba(255, 23, 68, 0.03); border: 1px solid rgba(255, 23, 68, 0.15); margin: 10px 16px 25px 16px; padding: 16px; border-radius: 22px; box-shadow: 0 8px 25px rgba(255, 23, 68, 0.05); }
+        .urgency-meta { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #ff5252; margin-bottom: 10px; align-items: center; }
+        .urgency-meta span i { margin-right: 4px; animation: torchPulse 1s infinite alternate; }
+        .urgency-track { height: 6px; background: rgba(255,255,255,0.05); border-radius: 100px; overflow: hidden; }
+        .urgency-fill { height: 100%; width: 89%; background: linear-gradient(90deg, #ff1744, #ff9100); border-radius: 100px; transition: width 0.5s ease; }
+
+        @keyframes torchPulse { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* ---  Ultra Premium Theatre Video Component --- */
+        .video-box-card { background: var(--dark-card); padding: 16px; margin: 10px 16px 30px 16px; border-radius: 28px; border: 1px solid var(--border-alpha); box-shadow: 0 20px 40px rgba(0,0,0,0.4); position: relative; }
+        .video-box-card::before { content: ''; position: absolute; inset: 0; border-radius: 28px; padding: 1px; background: linear-gradient(135deg, var(--border-alpha), var(--neon-border)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+        .video-player-frame { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 18px; overflow: hidden; background: #000; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); }
+        .video-player-frame iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+        /* --- App Section Typography --- */
+        .app-section-title { margin: 25px 20px 14px 20px; font-size: 17px; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 8px; letter-spacing: -0.3px; }
+        .app-section-title i { color: var(--primary); font-size: 16px; text-shadow: 0 0 10px rgba(0,230,118,0.4); }
+        
+        /* --- Grid Layout Architecture --- */
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px; }
+        .premium-f-card { background: var(--dark-card); padding: 22px 16px; border-radius: 24px; border: 1px solid var(--border-alpha); position: relative; }
+        .card-meta-icon { width: 42px; height: 42px; background: var(--primary-glow); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; border: 1px solid rgba(0,230,118,0.1); }
+        .card-meta-icon i { font-size: 16px; color: var(--primary); }
+        .premium-f-card h3 { font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
+        .premium-f-card p { font-size: 11.5px; color: var(--slate-light); line-height: 1.55; }
+
+        /* --- High Style Dynamic Reviews Swiper --- */
+        .review-carousel { display: flex; overflow-x: auto; gap: 14px; padding: 10px 16px 28px 16px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+        .review-carousel::-webkit-scrollbar { display: none; }
+        
+        .carousel-item { scroll-snap-align: start; min-width: 285px; max-width: 285px; background: var(--dark-card); padding: 20px; border-radius: 24px; border: 1px solid var(--border-alpha); display: flex; flex-direction: column; }
+        .user-meta-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .user-avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-alpha); background: rgba(255,255,255,0.05); }
+        .user-profile-info h4 { font-size: 13.5px; font-weight: 700; color: #ffffff; }
+        .star-badges { color: #ffca28; font-size: 9px; display: flex; gap: 2px; margin-top: 3px; }
+        .user-feedback-msg { font-size: 12.5px; color: #cbd5e1; line-height: 1.6; font-weight: 400; }
+
+        /* --- Cyber Sidebar Drawer Structure --- */
+        .sidebar-drawer { position: fixed; top: 0; right: -100%; width: 82%; height: 100%; background: #0a101d; z-index: 10001; transition: right 0.45s cubic-bezier(0.77, 0, 0.175, 1); padding: 30px 24px; box-shadow: -20px 0 50px rgba(0,0,0,0.6); border-left: 1px solid var(--border-alpha); }
+        .sidebar-drawer.active { right: 0; }
+        .backdrop-overlay { position: fixed; inset: 0; background: rgba(3, 7, 13, 0.6); display: none; z-index: 10000; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        
+        .drawer-links-container { list-style: none; margin-top: 35px; }
+        .drawer-links-container li { padding: 16px 14px; font-size: 15px; font-weight: 600; border-radius: 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 14px; color: #cbd5e1; cursor: pointer; border: 1px solid transparent; }
+        .drawer-links-container li:active { background: var(--primary-glow); color: var(--primary); border-color: rgba(0,230,118,0.1); }
+        .drawer-links-container li i { font-size: 17px; color: var(--slate-light); }
+
+        /* ---  Micro HUD Payout Toast System --- */
+        #payout-toast {
+            position: fixed; bottom: -90px; left: 16px; right: 16px;
+            background: rgba(13, 21, 39, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 230, 118, 0.2); padding: 14px 18px;
+            border-radius: 20px; z-index: 99999; display: flex; align-items: center; gap: 14px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(0, 230, 118, 0.05);
+            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .toast-icon { width: 38px; height: 38px; background: linear-gradient(135deg, var(--primary), var(--cyber-blue)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #060b13; font-size: 15px; }
+        .toast-body { flex: 1; }
+        .toast-user { font-size: 13px; font-weight: 700; color: #ffffff; }
+        .toast-meta { font-size: 11.5px; color: var(--primary); margin-top: 1px; font-weight: 500; }
+
+        /* --- Footer Pipeline --- */
+        footer { margin-top: 30px; padding: 45px 20px; text-align: center; background: #03070d; color: #475569; font-size: 11px; border-top: 1px solid var(--border-alpha); }
+        .footer-brand-logo { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; margin-bottom: 14px; border: 1px solid rgba(0, 230, 118, 0.2); box-shadow: 0 0 15px rgba(0, 230, 118, 0.1); }
+    </style>
+</head>
+<body>
+
+    <div id="intro-screen">
+        <div class="loader-hub">
+            <div class="loader-brand-circle">
+                <div class="scanner-line"></div>
+                <img src="task.png" class="loader-brand-img" alt="AMR TASK Logo">
+            </div>
+            <div class="loader-pct" id="loading-pct">0%</div>
+            <div class="progress-container">
+                <div class="progress-fill" id="loading-bar"></div>
+            </div>
+            <div class="status-msg" id="status-node-msg">Initializing Secure Core...</div>
+        </div>
+    </div>
+
+    <div id="main-app" style="display: none;">
+        
+        <header class="header">
+            <a href="#" class="brand-link">
+                <img src="task.png" class="brand-logo-img" alt="Logo">
+                <span class="brand-title">AMAR <span>TASK</span></span>
+            </a>
+            <i class="fa-solid fa-bars-staggered" id="menu-trigger-btn" style="font-size: 20px; color: var(--primary); cursor: pointer;"></i>
+        </header>
+
+        <div class="backdrop-overlay" id="backdrop-overlay"></div>
+        <div class="sidebar-drawer" id="sidebar-drawer">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border-alpha);">
+                <span class="brand-title">Navigation <span>Center</span></span>
+                <i class="fa-solid fa-xmark" id="menu-close-btn" style="font-size: 20px; color: var(--slate-light); cursor: pointer;"></i>
+            </div>
+            <ul class="drawer-links-container">
+                <li onclick="location.reload()"><i class="fa-solid fa-home"></i>  </li>
+                <li onclick="location.href='login.html'"><i class="fa-solid fa-user-check"></i>  </li>
+                <li onclick="location.href='register.html'"><i class="fa-solid fa-user-plus"></i>   -</li>
+                <li onclick="window.open('https://t.me/yourchannel')"><i class="fa-brands fa-telegram" style="color:#0088cc;"></i>  </li>
+            </ul>
+        </div>
+
+        <section class="hero-dashboard">
+            <div class="live-tag"><span></span> <b id="live-users-count">3,420</b>    </div>
+            <h1>   <br><span>   </span></h1>
+            <p>     -     -         </p>
+            <a href="register.html" class="action-cta-btn">
+                    <i class="fa-solid fa-arrow-right-long"></i>
+            </a>
+        </section>
+
+        <div class="urgency-box">
+            <div class="urgency-meta">
+                <span><i class="fa-solid fa-fire-flame-curved"></i>      !</span>
+                <span id="task-percentage">89% Completed</span>
+            </div>
+            <div class="urgency-track">
+                <div class="urgency-fill" id="urgency-progress" style="width: 89%;"></div>
+            </div>
+        </div>
+
+        <h2 class="app-section-title"><i class="fa-brands fa-youtube" style="color: #ff0000;"></i>    ? ()</h2>
+        <div class="video-box-card">
+            <div class="video-player-frame">
+                <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <h2 class="app-section-title"><i class="fa-solid fa-server"></i>   </h2>
+        <div class="grid-layout">
+            <div class="premium-f-card">
+                <div class="card-meta-icon"><i class="fa-solid fa-bolt-lightning"></i></div>
+                <h3>  </h3>
+                <p>          </p>
+            </div>
+            <div class="premium-f-card">
+                <div class="card-meta-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <h3>-  </h3>
+                <p> --       </p>
+            </div>
+        </div>
+
+        <h2 class="app-section-title"><i class="fa-solid fa-circle-nodes"></i>   </h2>
+        <div class="review-carousel" id="live-reviews-container">
+            <div style="padding: 15px; color: var(--slate-light); font-size: 12px; font-weight: 500;">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Syncing dynamic review streams...
+            </div>
+        </div>
+
+        <footer>
+            <img src="task.png" class="footer-brand-logo" alt="Footer Logo">
+            <p>&copy; 2026 AMR TASK Global. <br>Engineered for High-Fidelity Performance.</p>
+        </footer>
+    </div>
+
+    <div id="payout-toast">
+        <div class="toast-icon"><i class="fa-solid fa-bolt"></i></div>
+        <div class="toast-body">
+            <div class="toast-user" id="toast-username">Md. Fahim</div>
+            <div class="toast-meta" id="toast-amount">    !</div>
+        </div>
+    </div>
+
+    <script>
+        // Realtime Firebase Cluster Sync
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbyV4futjEJjdAbR3dMNf6dOIhAuj7tTo",
+            authDomain: "task-2503d.firebaseapp.com",
+            databaseURL: "https://task-2503d-default-rtdb.firebaseio.com",
+            projectId: "task-2503d",
+            storageBucket: "task-2503d.firebasestorage.app",
+            messagingSenderId: "707479242322",
+            appId: "1:707479242322:web:492db72a3b86653a0d018b"
+        };
+
+        // Firebase Initialization Safely
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+        } catch (e) {
+            console.error("Firebase init fallback error:", e);
+        }
+        
+        const database = firebase.database();
+
+        //  Perfect Isolated Loading Timer Loop Engine
+        (function() {
+            let currentProgress = 0;
+            const logStreams = ["Parsing Nodes...", "Routing Realtime DB...", "Optimizing UI Clusters...", "Securing Sandbox...", "Handshake Complete!"];
+
+            const syncTimer = setInterval(() => {
+                currentProgress += Math.floor(Math.random() * 6) + 4; 
+                if(currentProgress > 100) currentProgress = 100;
+
+                const barFill = document.getElementById('loading-bar');
+                const pctText = document.getElementById('loading-pct');
+                const statusLabel = document.getElementById('status-node-msg');
+
+                if (barFill) barFill.style.width = currentProgress + '%';
+                if (pctText) pctText.innerText = currentProgress + '%';
+                
+                if (statusLabel) {
+                    if(currentProgress < 20) statusLabel.innerText = logStreams[0];
+                    else if(currentProgress < 45) statusLabel.innerText = logStreams[1];
+                    else if(currentProgress < 70) statusLabel.innerText = logStreams[2];
+                    else if(currentProgress < 90) statusLabel.innerText = logStreams[3];
+                    else statusLabel.innerText = logStreams[4];
+                }
+
+                if (currentProgress >= 100) {
+                    clearInterval(syncTimer);
+                    
+                    setTimeout(() => {
+                        const introLayer = document.getElementById('intro-screen');
+                        const mainAppLayer = document.getElementById('main-app');
+                        
+                        if (introLayer) {
+                            introLayer.style.opacity = '0';
+                            introLayer.style.transform = 'translateY(-100%)';
+                            setTimeout(() => { introLayer.style.visibility = 'hidden'; }, 600);
+                        }
+                        
+                        if (mainAppLayer) {
+                            mainAppLayer.style.display = 'block';
+                            setTimeout(() => {
+                                mainAppLayer.classList.add('app-visible');
+                                fetchLiveReviews();
+                                startMarketingTricks();
+                            }, 50);
+                        }
+                    }, 250);
+                }
+            }, 50);
+        })();
+
+        // Native Sidebar Drawer Mechanics
+        const drawer = document.getElementById('sidebar-drawer');
+        const backdrop = document.getElementById('backdrop-overlay');
+        document.getElementById('menu-trigger-btn').onclick = () => { drawer.classList.add('active'); backdrop.style.display = 'block'; };
+        document.getElementById('menu-close-btn').onclick = () => { drawer.classList.remove('active'); backdrop.style.display = 'none'; };
+        backdrop.onclick = () => { drawer.classList.remove('active'); backdrop.style.display = 'none'; };
+
+        // Fetch Dynamic Reviews Node Safely
+        function fetchLiveReviews() {
+            try {
+                database.ref('reviews').limitToLast(12).on('value', (snapshot) => {
+                    const carousel = document.getElementById('live-reviews-container');
+                    if (!carousel) return;
+                    carousel.innerHTML = '';
+                    const snapshotData = snapshot.val();
+                    
+                    if (snapshotData) {
+                        Object.keys(snapshotData).reverse().forEach(nodeKey => {
+                            const reviewObj = snapshotData[nodeKey];
+                            let generatedStars = '';
+                            const parsedStars = parseInt(reviewObj.stars || 5);
+                            for(let i=0; i<5; i++) {
+                                generatedStars += `<i class="${i < parsedStars ? 'fa-solid' : 'fa-regular'} fa-star"></i>`;
+                            }
+                            
+                            carousel.innerHTML += `
+                                <div class="carousel-item">
+                                    <div class="user-meta-profile">
+                                        <img src="${reviewObj.photo || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="user-avatar-img" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                                        <div class="user-profile-info">
+                                            <h4>${reviewObj.name}</h4>
+                                            <div class="star-badges">${generatedStars}</div>
+                                        </div>
+                                    </div>
+                                    <p class="user-feedback-msg">"${reviewObj.comment || ' , !'}"</p>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        fallbackReviewUI();
+                    }
+                }, (error) => {
+                    fallbackReviewUI();
+                });
+            } catch(e) {
+                fallbackReviewUI();
+            }
+        }
+
+        function fallbackReviewUI() {
+            const carousel = document.getElementById('live-reviews-container');
+            if(carousel) {
+                carousel.innerHTML = `
+                    <div class="carousel-item">
+                        <div class="user-meta-profile">
+                            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="user-avatar-img">
+                            <div class="user-profile-info"><h4>Arif Rahman</h4><div class="star-badges"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div></div>
+                        </div>
+                        <p class="user-feedback-msg">"   !   "</p>
+                    </div>`;
+            }
+        }
+
+        //  Marketing Core HUD Notification Engine
+        function startMarketingTricks() {
+            // .    
+            setInterval(() => {
+                const liveCount = document.getElementById('live-users-count');
+                if (liveCount) {
+                    let current = parseInt(liveCount.innerText.replace(',', ''));
+                    current += Math.floor(Math.random() * 11) - 5;
+                    liveCount.innerText = current.toLocaleString();
+                }
+            }, 3500);
+
+            // .  -   
+            let basePct = 89;
+            setInterval(() => {
+                if(basePct < 97) {
+                    basePct += 1;
+                    const taskPct = document.getElementById('task-percentage');
+                    const urgencyProg = document.getElementById('urgency-progress');
+                    if (taskPct) taskPct.innerText = basePct + '% Completed';
+                    if (urgencyProg) urgencyProg.style.width = basePct + '%';
+                }
+            }, 14000);
+
+            // .     - 
+            const names = ["Sakib Khan", "Mst. Rokeya", "Tariqul Islam", "Anika Ahmed", "Nayeem Hasan", "Sumaiya Akter", "Arif Rahman", "Sujon Ahmed"];
+            const methods = ["", "", ""];
+            const amounts = [120, 150, 200, 280, 350, 420, 500, 800];
+            const toast = document.getElementById('payout-toast');
+
+            function showNextPayout() {
+                if(!toast) return;
+                const randomName = names[Math.floor(Math.random() * names.length)];
+                const randomMethod = methods[Math.floor(Math.random() * methods.length)];
+                const randomAmount = amounts[Math.floor(Math.random() * amounts.length)];
+
+                const tUser = document.getElementById('toast-username');
+                const tAmt = document.getElementById('toast-amount');
+                if (tUser) tUser.innerText = randomName;
+                if (tAmt) tAmt.innerText = `${randomMethod} ${randomAmount}   !`;
+
+                toast.style.bottom = '16px';
+
+                setTimeout(() => {
+                    toast.style.bottom = '-90px';
+                }, 4000);
+            }
+
+            setTimeout(() => {
+                showNextPayout();
+                setInterval(showNextPayout, 14000);
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

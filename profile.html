@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <script src="session.js"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title> Amar Task User Profile</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #00a651;
+            --primary-glow: rgba(0, 166, 81, 0.06);
+            --secondary-blue: #0088cc;
+            --bg-light: #f8fafc;
+            --card-white: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: rgba(0, 0, 0, 0.04);
+            --shadow-sm: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif; 
+            background-color: var(--bg-light); 
+            color: var(--text-main);
+            display: flex; 
+            justify-content: center; 
+            overflow-x: hidden; 
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .container { 
+            width: 100%; 
+            max-width: 400px; 
+            background: var(--card-white); 
+            min-height: 100vh; 
+            position: relative; 
+            padding-bottom: 40px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.03);
+        }
+
+        /* --- 💎 Minimalist White Loader --- */
+        #loader-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .loader-container { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        .proc-9 { 
+            width: 70px; height: 70px; border: 2px solid rgba(0, 166, 81, 0.1); 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            background: var(--card-white); position: relative; 
+            box-shadow: var(--shadow-md);
+        }
+        .loader-img { width: 38px; height: 38px; border-radius: 50%; }
+        .proc-9::before { 
+            content: ""; position: absolute; top: -3px; left: -3px; right: -3px; bottom: -3px; 
+            border: 3px solid var(--primary); border-radius: 50%; 
+            animation: trace 1.3s linear infinite; clip-path: inset(0 0 90% 0); 
+        }
+        @keyframes trace { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- Clean Sticky Header --- */
+        .header { 
+            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            color: var(--text-main); padding: 16px 20px; display: flex; align-items: center; 
+            font-size: 18px; font-weight: 800; position: sticky; top: 0; z-index: 100; 
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header i { font-size: 18px; color: var(--primary); cursor: pointer; transition: transform 0.2s; }
+        .header i:active { transform: scale(0.85); }
+        
+        /* --- Premium Profile Hero Section --- */
+        .profile-section { position: relative; background: var(--card-white); text-align: center; padding-bottom: 15px; }
+        
+        /* --- Facebooka Style Cover Box ( task.png ) --- */
+        .cover-box { 
+            background-image: url('task.png'); 
+            background-size: cover; 
+            background-position: center; 
+            background-repeat: no-repeat;
+            height: 120px; width: 100%; position: absolute; top: 0; left: 0; 
+            opacity: 0.7;
+        }
+        .profile-content { position: relative; padding-top: 60px; z-index: 1; }
+        
+        .logo-circle { 
+            width: 105px; height: 105px; background: var(--card-white); border-radius: 50%; 
+            margin: 0 auto; display: flex; align-items: center; justify-content: center; 
+            border: 4px solid var(--card-white); overflow: hidden; cursor: pointer; 
+            box-shadow: 0 10px 25px rgba(0, 166, 81, 0.15); position: relative;
+        }
+        #profileImg { width: 100%; height: 100%; object-fit: cover; }
+        
+        .user-name { font-weight: 800; margin-top: 12px; font-size: 21px; color: var(--text-main); letter-spacing: -0.5px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        
+        /* Facebooka style Verified / Unverified Icon placed beside User Name */
+        #userNameDisplay .verification-icon {
+            font-size: 16px;
+        }
+        .fa-circle-check.verified-icon { color: #007bff; } /* Verified blue icon */
+        .fa-circle-exclamation.unverified-icon { color: #d32f2f; } /* Unverified red icon */
+
+        /* Premium UID Tag */
+        .user-uid { 
+            color: var(--text-muted); font-size: 11.5px; font-weight: 600; margin-top: 5px; 
+            background: #f1f5f9; padding: 4px 14px; border-radius: 100px; 
+            display: inline-block; border: 1px solid rgba(0,0,0,0.02); 
+            font-family: sans-serif;
+        }
+        .user-uid span { color: var(--primary); font-weight: 700; }
+
+        /* --- Wallet Balance Box --- */
+        .balance-wrapper { padding: 20px 16px 8px 16px; }
+        .mini-balance-box { 
+            background: var(--card-white); border-left: 4px solid var(--primary); 
+            padding: 15px 18px; border-radius: 16px; 
+            box-shadow: var(--shadow-md); display: flex; flex-direction: column; 
+            border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);
+        }
+        .amount-wrap { font-size: 26px; font-weight: 800; color: var(--primary); margin-top: 2px; font-family: sans-serif; }
+
+        /* --- Quick Mini Menus --- */
+        .service-action-container { display: flex; gap: 12px; padding: 10px 16px; }
+        .action-btn { 
+            flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; 
+            padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); 
+            background: var(--card-white); font-size: 14px; font-weight: 700; color: #475569; 
+            cursor: pointer; box-shadow: var(--shadow-sm); transition: 0.2s; 
+        }
+        .action-btn:active { transform: scale(0.96); background: #f8fafc; }
+        .action-btn i { color: var(--primary); font-size: 15px; }
+        
+        /* --- Clean Service Title --- */
+        .services-title { 
+            padding: 8px 14px; border-left: 4px solid var(--primary); 
+            margin: 22px 16px 12px 16px; font-weight: 800; color: var(--text-main); 
+            background: #f8fafc; font-size: 14px; border-radius: 0 8px 8px 0;
+        }
+
+        /* --- Premium Minimal Grid Nodes --- */
+        .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 16px; }
+        .service-item { 
+            background: var(--card-white); border: 1px solid var(--border-color); 
+            border-radius: 18px; padding: 18px 5px; text-align: center; 
+            font-size: 12.5px; color: #475569; font-weight: 600; cursor: pointer; 
+            box-shadow: var(--shadow-sm); transition: 0.2s; 
+        }
+        .service-item:active { transform: scale(0.95); background: var(--primary-glow); border-color: rgba(0,166,81,0.15); }
+        .service-item i { font-size: 22px; color: var(--primary); margin-bottom: 8px; display: block; }
+        
+        /* Luxury Logout Custom Red */
+        .service-item.logout { background: #fff5f5; border-color: rgba(211, 47, 47, 0.08); color: #c62828; }
+        .service-item.logout i { color: #d32f2f; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+<div id="loader-overlay">
+    <div class="loader-container">
+        <div class="proc-9"><img src="task.png" class="loader-img" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'"></div>
+        <span style="color: var(--primary); font-weight: 800; font-size: 13px; letter-spacing: 0.5px;">PROCESSING...</span>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <i class="fa-solid fa-arrow-left" onclick="navigateTo('home.html')"></i>
+        <div style="flex-grow: 1; text-align: center; margin-right: 30px; letter-spacing: -0.3px;">Profile</div>
+    </div>
+
+    <div class="profile-section">
+        <div class="cover-box"></div>
+        <div class="profile-content">
+            <div class="logo-circle" onclick="document.getElementById('fileInput').click()">
+                <img id="profileImg" src="https://i.postimg.cc/KvG0G8YD/boy-profile-photo-cartoon-11152300-png-sw800.png">
+            </div>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+            
+            <div class="user-name" id="userNameDisplay">Loading...</div>
+            
+            <div class="user-uid">UID: <span id="userUidDisplay">------</span></div>
+            
+        </div>
+    </div>
+
+    <div class="balance-wrapper">
+        <div class="mini-balance-box">
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Total Balance </span>
+            <div class="amount-wrap">
+                <span style="font-size: 16px; font-weight: 700; margin-right: 1px;">৳</span><span id="mainBalanceDisplay">0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="service-action-container">
+        <div class="action-btn" onclick="navigateTo('personal.html')"><i class="fa-solid fa-user-gear"></i> Personal</div>
+        <div class="action-btn" onclick="navigateTo('group.html')"><i class="fa-solid fa-users-rectangle"></i> In-Group</div>
+    </div>
+
+    <div class="services-title">Core Service Links</div>
+
+    <div class="services-grid">
+        <div class="service-item" onclick="navigateTo('withdraw.html')"><i class="fa-solid fa-credit-card"></i>Withdraw</div>
+        <div class="service-item" onclick="navigateTo('history.html')"><i class="fa-solid fa-clock-rotate-left"></i>History</div>
+        <div class="service-item" onclick="navigateTo('about.html')"><i class="fa-solid fa-circle-info"></i>About</div>
+        
+        <div class="service-item" onclick="navigateTo('personal.html')"><i class="fa-solid fa-gear"></i>Settings</div>
+        <div class="service-item" onclick="navigateTo('password.html')"><i class="fa-solid fa-key"></i>Password</div>
+        <div class="service-item" onclick="navigateTo('service.html')"><i class="fa-solid fa-headset"></i>Support</div>
+        
+        <div class="service-item" onclick="navigateTo('app.html')"><i class="fa-solid fa-download"></i>Get App</div>
+        <div class="service-item logout" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket" id="logoutIcon"></i>Logout</div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    // প্রোফাইল ইমেজ আপলোড প্রোসেস
+    const fileInput = document.getElementById('fileInput');
+    const profileImg = document.getElementById('profileImg');
+    const savedImage = localStorage.getItem('userProfilePic');
+    if (savedImage) profileImg.src = savedImage;
+
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const base64Image = event.target.result;
+                profileImg.src = base64Image;
+                localStorage.setItem('userProfilePic', base64Image);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // ক্লিন নেভিগেশন স্পিড ইঞ্জিন
+    window.navigateTo = (url) => {
+        const overlay = document.getElementById('loader-overlay');
+        if(overlay) overlay.style.display = 'flex'; 
+        setTimeout(() => { window.location.href = url; }, 650); 
+    };
+
+    // লাক্সারি কনফার্মেশন লগআউট ট্র্যাকার
+    function handleLogout() {
+        if(confirm("আপনি কি অ্যাকাউন্ট থেকে লগআউট করতে চান?")) {
+            const icon = document.getElementById('logoutIcon');
+            if(icon) icon.classList.add('fa-spin');
+            localStorage.clear();
+            sessionStorage.clear();
+            setTimeout(() => { window.location.replace('login.html'); }, 850);
+        }
+    }
+
+    // স্ট্রাকচার প্রটেকশন (Anti Inspect Element)
+    document.onkeydown = function(e) {
+        if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) || (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+            return false;
+        }
+    };
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+      apiKey: "AIzaSyDbyV4futjEJjdAbR3dMNf6dOIhAuj7tTo",
+      authDomain: "task-2503d.firebaseapp.com",
+      projectId: "task-2503d",
+      appId: "1:707479242322:web:492db72a3b86653a0d018b"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const userId = localStorage.getItem('currentUserId');
+  
+  if (userId) {
+      // ইনস্ট্যান্ট ইউজার আইডি ইন্টারফেসে পুশ হবে
+      document.getElementById('userUidDisplay').innerText = userId;
+
+      onSnapshot(doc(db, "users", userId), (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          
+          // ফায়ারবেস রিয়েল-টাইম ডেটা রেন্ডারিং
+          const userNameDisplay = document.getElementById('userNameDisplay');
+          const name = data.name || "Premium User";
+          
+          // Facebooka-style Verification Icon Conditionally Displayed next to User Name
+          let verificationIcon = '';
+          if (data.status === "verified" || data.verified === true) {
+              verificationIcon = '<i class="fa-solid fa-circle-check verified-icon verification-icon"></i>'; // Blue Verified Icon
+          } else {
+              verificationIcon = '<i class="fa-solid fa-circle-exclamation unverified-icon verification-icon"></i>'; // Red Unverified Icon
+          }
+          userNameDisplay.innerHTML = `${name} ${verificationIcon}`;
+          
+          document.getElementById('mainBalanceDisplay').innerText = parseFloat(data.balance || 0).toFixed(2);
+        }
+      }, (error) => {
+          console.error("Firestore Stack Leak Error: ", error);
+      });
+  } else { 
+      window.location.replace('login.html'); 
+  }
+</script>
+
+</body>
+</html>

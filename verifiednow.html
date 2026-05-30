@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script>
+        if (!localStorage.getItem('currentUserId')) { window.location.replace('login.html'); }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Verification - AMAR TASK</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'SF Pro Display',-apple-system,BlinkMacSystemFont,Roboto,sans-serif; }
+        body { background-color: #f8fafc; color: #1e293b; height: 100vh; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+
+        /* --- হেডার সেকশন --- */
+        .verify-header {
+            background: linear-gradient(135deg, #0f172a, #1e1b4b);
+            color: white; padding: 30px 20px; text-align: center;
+            border-bottom-left-radius: 32px; border-bottom-right-radius: 32px;
+            position: relative; flex-shrink: 0;
+        }
+        .back-btn {
+            position: absolute; top: 30px; left: 20px;
+            background: rgba(255,255,255,0.15); border: none; color: white;
+            width: 38px; height: 38px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; cursor: pointer; transition: 0.2s;
+        }
+        .back-btn:active { transform: scale(0.9); }
+        .verify-header h2 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+
+        /* --- ইউজার প্রোফাইল কার্ড --- */
+        .user-profile-card {
+            background: white; border-radius: 24px; padding: 20px;
+            margin: -25px 20px 15px 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+            display: flex; align-items: center; gap: 15px; position: relative; z-index: 10;
+            border: 1px solid #e2e8f0;
+        }
+        .user-avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #4f46e5; }
+        .user-details { flex: 1; min-width: 0; }
+        .user-name { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-uid { font-size: 11px; color: #64748b; font-weight: 600; }
+        
+        .user-balance-box { text-align: right; background: #f0fdf4; padding: 8px 12px; border-radius: 14px; border: 1px solid #bbf7d0; }
+        .balance-label { font-size: 9px; font-weight: 700; color: #16a34a; text-transform: uppercase; }
+        .balance-amount { font-size: 15px; font-weight: 800; color: #15803d; margin-top: 1px; }
+
+        /* --- মেইন স্ক্রোল এরিয়া --- */
+        .verify-scroll-area { padding: 10px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px; }
+        .verify-scroll-area::-webkit-scrollbar { display: none; }
+
+        .section-intro { font-size: 14px; font-weight: 700; color: #475569; margin-bottom: -4px; display: flex; align-items: center; gap: 6px; }
+        .section-intro i { color: #f59e0b; }
+
+        /* --- ভেরিফিকেশন প্যাকেজ লিস্ট (Admin Controlled) --- */
+        .package-container { display: flex; flex-direction: column; gap: 14px; }
+        
+        .package-card {
+            background: white; border-radius: 20px; padding: 18px;
+            border: 2px solid #e2e8f0; position: relative; cursor: pointer;
+            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; gap: 12px;
+        }
+        .package-card.selected { border-color: #4f46e5; background: #f5f3ff; }
+        .package-card.selected::before {
+            content: "\f058"; font-family: "Font Awesome 6 Free"; font-weight: 900;
+            position: absolute; top: 18px; right: 18px; color: #4f46e5; font-size: 20px;
+        }
+
+        .package-badge { position: absolute; top: -10px; left: 18px; background: #4f46e5; color: white; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+        .package-info-row { display: flex; justify-content: space-between; align-items: flex-start; padding-right: 30px; }
+        .package-title { font-size: 16px; font-weight: 800; color: #0f172a; }
+        .package-duration { font-size: 12px; color: #64748b; font-weight: 600; margin-top: 2px; }
+        
+        .package-price-tag { text-align: right; }
+        .price-amount { font-size: 18px; font-weight: 800; color: #4f46e5; }
+
+        .package-features { display: flex; flex-direction: column; gap: 6px; border-top: 1px dashed #e2e8f0; padding-top: 10px; }
+        .feature-item { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: #475569; }
+        .feature-item i { color: #22c55e; font-size: 11px; }
+
+        /* সাবমিট বোতাম */
+        .btn-verify-submit {
+            background: linear-gradient(135deg, #4f46e5, #3730a3);
+            color: white; border: none; width: 100%; padding: 15px; border-radius: 16px;
+            font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; gap: 8px; margin-top: 10px; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+            transition: 0.2s;
+        }
+        .btn-verify-submit:active { transform: scale(0.98); }
+        .btn-verify-submit:disabled { background: #cbd5e1; color: #94a3b8; box-shadow: none; cursor: not-allowed; }
+
+        /* --- কাস্টম ইন-অ্যাপ নোটিফিকেশন অ্যালার্ট (iOS Style) --- */
+        .custom-alert-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px);
+            z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .custom-alert-box {
+            background: white; width: 100%; max-width: 320px; border-radius: 24px;
+            padding: 24px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            transform: scale(0.9); transition: 0.2s ease-out;
+        }
+        .custom-alert-overlay.show { display: flex; }
+        .custom-alert-overlay.show .custom-alert-box { transform: scale(1); }
+        .alert-icon-box { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 24px; }
+        .alert-icon-warn { background: #fee2e2; color: #ef4444; }
+        .alert-icon-success { background: #dcfce7; color: #22c55e; }
+        .alert-icon-info { background: #eef2ff; color: #4f46e5; }
+        .alert-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+        .alert-desc { font-size: 14px; color: #64748b; font-weight: 500; line-height: 1.4; margin-bottom: 24px; }
+        .alert-buttons { display: flex; gap: 12px; }
+        .alert-btn { flex: 1; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; transition: 0.1s; }
+        .alert-btn-cancel { background: #f1f5f9; color: #475569; }
+        .alert-btn-confirm { background: #4f46e5; color: white; }
+        .alert-btn-success { background: #4f46e5; color: white; }
+
+        /* --- কাস্টম পার্সেন্টেজ লোডার ওভারলে (%) --- */
+        #loader-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); 
+            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; 
+        }
+        .loader-container { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
+        .premium-spinner { 
+            position: absolute; width: 100%; height: 100%; 
+            border: 4px solid #f1f5f9; border-top: 4px solid #4f46e5; 
+            border-radius: 50%; animation: spin 0.8s linear infinite; 
+        }
+        .loader-text-pct { font-size: 16px; font-weight: 800; color: #1e293b; position: relative; z-index: 10; }
+        .loader-msg { font-size: 13px; font-weight: 700; color: #64748b; margin-top: 16px; letter-spacing: 0.3px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .no-packages { text-align: center; color: #94a3b8; font-size: 13px; padding: 40px 0; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <!-- পার্সেন্টেজ (%) লোডার প্যানেল -->
+    <div id="loader-overlay">
+        <div class="loader-container">
+            <div class="premium-spinner"></div>
+            <span class="loader-text-pct" id="upload-pct">0%</span>
+        </div>
+        <p class="loader-msg" id="loader-msg-text">Processing...</p>
+    </div>
+
+    <!-- কাস্টম নোটিফিকেশন অ্যালার্ট ডায়ালগ -->
+    <div class="custom-alert-overlay" id="custom-alert">
+        <div class="custom-alert-box">
+            <div class="alert-icon-box" id="alert-icon-div">
+                <i id="alert-main-icon" class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="alert-title" id="alert-box-title">Are you sure?</h4>
+            <p class="alert-desc" id="alert-box-desc">Do you really want to perform this action?</p>
+            <div class="alert-buttons" id="alert-action-buttons">
+                <!-- ডায়নামিক বাটন এখানে ইনজেক্ট হবে -->
+            </div>
+        </div>
+    </div>
+
+    <!-- হেডার সেকশন -->
+    <div class="verify-header">
+        <button class="back-btn" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i></button>
+        <h2>Verification Box</h2>
+    </div>
+
+    <!-- ইউজারের সংক্ষিপ্ত প্রোফাইল ও ব্যালেন্স তথ্য কার্ড -->
+    <div class="user-profile-card">
+        <img id="user-verify-avatar" src="https://i.postimg.cc/KvG0G8YD/boy-profile-photo-cartoon-11152300-png-sw800.png" class="user-avatar">
+        <div class="user-details">
+            <h3 class="user-name" id="user-display-name">Loading User...</h3>
+            <span class="user-uid" id="user-display-uid">UID: ------</span>
+        </div>
+        <div class="user-balance-box">
+            <p class="balance-label">Main Balance</p>
+            <p class="balance-amount" id="user-display-balance">৳0.00</p>
+        </div>
+    </div>
+
+    <!-- মেইন স্ক্রোল এরিয়া -->
+    <div class="verify-scroll-area">
+        
+        <p class="section-intro"><i class="fa-solid fa-gem"></i> Select Verification Plan</p>
+        
+        <!-- অ্যাডমিন প্যানেল থেকে প্যাকেজ লোড হওয়ার মেইন কন্টেইনার -->
+        <div class="package-container" id="package-list-box">
+            <div class="no-packages">Fetching active plans, please wait...</div>
+        </div>
+
+        <!-- অ্যাকশন বোতাম -->
+        <button class="btn-verify-submit" id="submit-verify-btn" disabled>
+            <i class="fa-solid fa-circle-check"></i> Verify My Account Now
+        </button>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbyV4futjEJjdAbR3dMNf6dOIhAuj7tTo",
+            authDomain: "task-2503d.firebaseapp.com",
+            projectId: "task-2503d",
+            appId: "1:707479242322:web:492db72a3b86653a0d018b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const userId = localStorage.getItem('currentUserId');
+        
+        const loaderOverlay = document.getElementById('loader-overlay');
+        const pctText = document.getElementById('upload-pct');
+        const msgText = document.getElementById('loader-msg-text');
+
+        let userCurrentBalance = 0;
+        let selectedPackageId = null;
+        let selectedPackagePrice = 0;
+        let selectedPackageDuration = 0;
+
+        // --- কাস্টম পার্সেন্টেজ (%) রানার ফাংশন ---
+        function runPercentageLoader(targetMsg, duration, callback) {
+            loaderOverlay.style.display = 'flex';
+            msgText.innerText = targetMsg;
+            let currentPct = 0;
+            pctText.innerText = `0%`;
+
+            const intervalStep = duration / 100;
+            const timer = setInterval(() => {
+                currentPct++;
+                pctText.innerText = `${currentPct}%`;
+
+                if (currentPct >= 100) {
+                    clearInterval(timer);
+                    setTimeout(() => {
+                        loaderOverlay.style.display = 'none';
+                        if (callback) callback();
+                    }, 200);
+                }
+            }, intervalStep);
+        }
+
+        // --- ইন-অ্যাপ কাস্টম অ্যালার্ট সিস্টেম ফাংশন ---
+        function showCustomAlert(type, title, description, confirmCallback) {
+            const alertOverlay = document.getElementById('custom-alert');
+            const iconDiv = document.getElementById('alert-icon-div');
+            const mainIcon = document.getElementById('alert-main-icon');
+            const btnBox = document.getElementById('alert-action-buttons');
+
+            document.getElementById('alert-box-title').innerText = title;
+            document.getElementById('alert-box-desc').innerText = description;
+
+            iconDiv.className = "alert-icon-box"; 
+            if (type === 'warn') {
+                iconDiv.classList.add('alert-icon-warn');
+                mainIcon.className = "fa-solid fa-triangle-exclamation";
+            } else if (type === 'success') {
+                iconDiv.classList.add('alert-icon-success');
+                mainIcon.className = "fa-solid fa-circle-check";
+            } else {
+                iconDiv.classList.add('alert-icon-info');
+                mainIcon.className = "fa-solid fa-circle-info";
+            }
+
+            btnBox.innerHTML = '';
+            if (confirmCallback) {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = "alert-btn alert-btn-cancel";
+                cancelBtn.innerText = "Cancel";
+                cancelBtn.onclick = () => alertOverlay.classList.remove('show');
+
+                const actionBtn = document.createElement('button');
+                actionBtn.className = "alert-btn alert-btn-confirm";
+                actionBtn.innerText = "Confirm";
+                actionBtn.onclick = () => {
+                    alertOverlay.classList.remove('show');
+                    confirmCallback();
+                };
+
+                btnBox.appendChild(cancelBtn);
+                btnBox.appendChild(actionBtn);
+            } else {
+                const okBtn = document.createElement('button');
+                okBtn.className = "alert-btn alert-btn-success";
+                okBtn.innerText = "OK";
+                okBtn.onclick = () => alertOverlay.classList.remove('show');
+                btnBox.appendChild(okBtn);
+            }
+
+            alertOverlay.classList.add('show');
+        }
+
+        // --- ইউজারের ডাটা লোড ও সেটআপ ---
+        async function loadUserData() {
+            if (!userId) return;
+            
+            // লোকাল স্টোরেজ ক্যাশ থেকে ইমেজ সেটআপ
+            const savedImage = localStorage.getItem('userProfilePic');
+            if (savedImage) document.getElementById('user-verify-avatar').src = savedImage;
+
+            try {
+                const userSnap = await getDoc(doc(db, "users", userId));
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+                    userCurrentBalance = parseFloat(data.balance || 0);
+                    
+                    document.getElementById('user-display-name').innerText = data.name || "Premium User";
+                    document.getElementById('user-display-uid').innerText = `UID: ${userId}`;
+                    document.getElementById('user-display-balance').innerText = `৳${userCurrentBalance.toFixed(2)}`;
+                }
+            } catch (e) {
+                console.error("Error loading user data:", e);
+            }
+        }
+
+        // --- অ্যাডমিন প্যানেলের প্যাকেজ বা প্ল্যান লিস্ট লোড (Firestore থেকে) ---
+        async function fetchVerificationPackages() {
+            const listBox = document.getElementById('package-list-box');
+            try {
+                // অ্যাডমিনের 'packages' কালেকশন থেকে ডাটা রিড করবে
+                const qSnap = await getDocs(collection(db, "packages"));
+                listBox.innerHTML = '';
+
+                if (qSnap.empty) {
+                    listBox.innerHTML = '<div class="no-packages">No dynamic verification plans found. Contact Admin.</div>';
+                    return;
+                }
+
+                let index = 0;
+                qSnap.forEach((docRecord) => {
+                    const pkg = docRecord.data();
+                    const pId = docRecord.id;
+                    const price = parseFloat(pkg.price || 0);
+                    const days = parseInt(pkg.durationDays || 30);
+                    const title = pkg.name || "Verification Card";
+                    const tag = pkg.badgeTag || "Popular";
+                    
+                    // ফিচারগুলো যদি অ্যারে না হয়ে কমা সেপারেটেড স্ট্রিং হয় সেটার সেফটি হ্যান্ডলিং
+                    let featuresArr = pkg.features || ["Access all premium tasks", "Instant automated withdrawal"];
+                    if(typeof featuresArr === 'string') {
+                        featuresArr = featuresArr.split(',');
+                    }
+
+                    let featuresHtml = '';
+                    featuresArr.forEach(f => {
+                        featuresHtml += `<div class="feature-item"><i class="fa-solid fa-circle-check"></i> ${f.trim()}</div>`;
+                    });
+
+                    const cardHtml = `
+                        <div class="package-card" id="pkg-${pId}" onclick="selectPackage('${pId}', ${price}, ${days})">
+                            ${pkg.showBadge ? `<span class="package-badge">${tag}</span>` : ''}
+                            <div class="package-info-row">
+                                <div>
+                                    <h4 class="package-title">${title}</h4>
+                                    <p class="package-duration"><i class="fa-solid fa-clock"></i> Validity: ${days} Days</p>
+                                </div>
+                                <div class="package-price-tag">
+                                    <p class="price-amount">৳${price}</p>
+                                </div>
+                            </div>
+                            <div class="package-features">
+                                ${featuresHtml}
+                            </div>
+                        </div>`;
+                    listBox.insertAdjacentHTML('beforeend', cardHtml);
+                    index++;
+                });
+
+            } catch (e) {
+                console.error("Error fetching packages:", e);
+                listBox.innerHTML = '<div class="no-packages" style="color:#ef4444;">Failed to sync verification plans.</div>';
+            }
+        }
+
+        // --- প্যাকেজ সিলেক্ট হ্যান্ডলিং ফাংশন ---
+        window.selectPackage = (id, price, duration) => {
+            // আগের সিলেক্টেড কার্ডের বর্ডার ও রিমুভ করা
+            const allCards = document.querySelectorAll('.package-card');
+            allCards.forEach(card => card.classList.remove('selected'));
+
+            // নতুন কার্ড সিলেক্ট করা
+            const targetCard = document.getElementById(`pkg-${id}`);
+            if (targetCard) targetCard.classList.add('selected');
+
+            selectedPackageId = id;
+            selectedPackagePrice = price;
+            selectedPackageDuration = duration;
+
+            // ভেরিফাই সাবমিট বাটন একটিভ করা
+            document.getElementById('submit-verify-btn').disabled = false;
+        };
+
+        // --- অ্যাকাউন্ট ভেরিফিকেশন পারচেজ প্রসেস লজিক ---
+        document.getElementById('submit-verify-btn').onclick = () => {
+            if (!selectedPackageId) return;
+
+            // ১. ব্যালেন্স চেক করা
+            if (userCurrentBalance < selectedPackagePrice) {
+                showCustomAlert('warn', 'Insufficient Funds!', `You need ৳${selectedPackagePrice.toFixed(2)} to purchase this plan. Please deposit money to your main wallet first.`);
+                return;
+            }
+
+            // ২. কনফার্মেশন প্রম্পট শো করা
+            showCustomAlert('info', 'Activate Plan?', `৳${selectedPackagePrice.toFixed(2)} will be deducted from your account balance. Do you want to continue?`, () => {
+                
+                // ৩. পার্সেন্টেজ লোডার রান করা
+                runPercentageLoader("Configuring safety secure nodes...", 2000, async () => {
+                    try {
+                        const nextBalance = userCurrentBalance - selectedPackagePrice;
+                        
+                        // ৪. ডাটাবেজ আপডেট (Users collection)
+                        await updateDoc(doc(db, "users", userId), {
+                            balance: nextBalance,
+                            status: "verified",
+                            verified: true,
+                            verifiedAt: serverTimestamp(),
+                            expiryDays: selectedPackageDuration
+                        });
+
+                        // ৫. লোকাল মেমোরি ক্যাশ আপডেট যাতে হোম স্ক্রিন ইনস্ট্যান্ট রেসপন্স করে
+                        localStorage.setItem('cached_balance', nextBalance.toFixed(2));
+
+                        setTimeout(() => {
+                            showCustomAlert('success', 'Verified Successfully!', 'Congratulations! Your account has been promoted to elite level. Redirecting to home...', () => {
+                                window.location.replace('home.html');
+                            });
+                        }, 300);
+
+                    } catch (err) {
+                        console.error(err);
+                        showCustomAlert('warn', 'Database Error!', 'Failed to update system settings. Try again later.');
+                    }
+                });
+
+            });
+        };
+
+        window.goBack = () => {
+            window.location.href = 'home.html';
+        };
+
+        // ইনিশিয়াল লোড মেকানিজম
+        runPercentageLoader("Syncing Gateway...", 500, () => {
+            loadUserData();
+            fetchVerificationPackages();
+        });
+    </script>
+</body>
+</html>

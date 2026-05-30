@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script>
+        if (!localStorage.getItem('currentUserId')) { window.location.replace('login.html'); }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Records</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style> 
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'SF Pro Display',-apple-system,BlinkMacSystemFont,Roboto,sans-serif; }
+        body { background-color: #f8fafc; color: #1e293b; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* --- গ্লোবাল লোডার --- */
+        #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(6px); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .premium-spinner { width: 50px; height: 50px; border: 4px solid #e2e8f0; border-top: 4px solid #4f46e5; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- টপ বার --- */
+        .top-bar { background: linear-gradient(135deg, #0f172a, #1e1b4b); color: white; padding: 18px 20px; display: flex; align-items: center; gap: 15px; font-size: 16px; font-weight: 700; flex-shrink: 0; }
+        .top-bar i { cursor: pointer; font-size: 18px; }
+
+        /* --- স্ট্যাটাস ফিল্টার ট্যাব --- */
+        .tab-container { display: flex; background: white; padding: 10px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; }
+        .tab-btn { flex: 1; text-align: center; padding: 10px 0; font-size: 13px; font-weight: 700; color: #64748b; border: none; background: transparent; cursor: pointer; border-radius: 10px; transition: 0.2s; }
+        .tab-btn.active { color: #4f46e5; background: #eef2ff; }
+
+        /* --- রেকর্ড লিস্ট স্ক্রল এরিয়া --- */
+        .record-scroll-area { padding: 16px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+        .record-scroll-area::-webkit-scrollbar { display: none; }
+
+        /* --- প্রিমিয়াম হিস্ট্রিカード --- */
+        .record-card { background: white; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01); border: 1px solid #f1f5f9; }
+        .record-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .record-title { font-size: 14px; font-weight: 700; color: #0f172a; line-height: 1.4; }
+        .record-amount { font-size: 15px; font-weight: 800; color: #22c55e; white-space: nowrap; }
+        
+        .record-bottom { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #94a3b8; border-top: 1px dashed #f1f5f9; padding-top: 8px; }
+        .record-time { font-weight: 500; }
+        
+        /* স্ট্যাটাস ব্যাজ */
+        .status-badge { padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 10px; text-transform: uppercase; }
+        .status-completed { background: #dcfce7; color: #16a34a; }
+        .status-pending { background: #fef9c3; color: #ca8a04; }
+        .status-rejected { background: #fee2e2; color: #dc2626; }
+
+        .no-data-box { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 13px; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .no-data-box i { font-size: 32px; color: #cbd5e1; }
+
+        /* বটম নেভিগেশন */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 20px 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.03); border-top-left-radius: 24px; border-top-right-radius: 24px; z-index: 20; }
+        .nav-item { text-align: center; color: #94a3b8; text-decoration: none; font-size: 11px; flex: 1; cursor: pointer; font-weight: 600; }
+        .nav-item.active { color: #4f46e5; }
+        .nav-item i { font-size: 20px; display: block; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+    <div id="loader-overlay"><div class="premium-spinner"></div></div>
+
+    <div class="top-bar">
+        <i class="fa-solid fa-chevron-left" onclick="window.location.href='home.html'"></i>
+        <span>Amar Task History</span>
+    </div>
+
+    <div class="tab-container">
+        <button class="tab-btn active" id="tab-all" onclick="switchTab('all', this)">All</button>
+        <button class="tab-btn" id="tab-pending" onclick="switchTab('pending', this)">Pending</button>
+        <button class="tab-btn" id="tab-completed" onclick="switchTab('completed', this)">Completed</button>
+        <button class="tab-btn" id="tab-rejected" onclick="switchTab('rejected', this)">Rejected</button>
+    </div>
+
+    <div class="record-scroll-area" id="records-container">
+        <div class="no-data-box">
+            <i class="fa-solid fa-receipt"></i>
+            <span>Loading task history...</span>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="nav-item" onclick="navigateTo('home.html')"><i class="fa-solid fa-house-chimney-window"></i>Home</div>
+        <div class="nav-item active" onclick="navigateTo('order.html')"><i class="fa-solid fa-receipt"></i>Records</div>
+        <div class="nav-item" onclick="navigateTo('share.html')"><i class="fa-solid fa-diagram-project"></i>Team</div>
+        <div class="nav-item" onclick="navigateTo('profile.html')"><i class="fa-solid fa-user-gear"></i>Profile</div>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbyV4futjEJjdAbR3dMNf6dOIhAuj7tTo",
+            authDomain: "task-2503d.firebaseapp.com",
+            projectId: "task-2503d",
+            appId: "1:707479242322:web:492db72a3b86653a0d018b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const userId = localStorage.getItem('currentUserId');
+        const loader = document.getElementById('loader-overlay');
+
+        let allRecords = []; 
+        let currentActiveTab = 'all'; 
+
+        window.navigateTo = (url) => {
+            loader.style.display = 'flex'; 
+            window.location.href = url;
+        };
+
+        // --- রিয়েল-টাইম অন-স্ম্যাপশট লিসেনার (লিমিট সেভিং এবং লাইভ রিজেক্ট ফিক্স) ---
+        function listenUserRecords() {
+            const container = document.getElementById('records-container');
+            if (!userId) return;
+
+            const q = query(
+                collection(db, "orders"), 
+                where("userId", "==", userId)
+            );
+
+            // onSnapshot ডাটা লোকাল ক্যাশে সেভ রাখে এবং শুধু চেঞ্জ হওয়া ডাটা রিয়েল-টাইম টানে
+            onSnapshot(q, (snapshot) => {
+                allRecords = [];
+                
+                snapshot.forEach((docSnap) => {
+                    allRecords.push({
+                        id: docSnap.id,
+                        ...docSnap.data()
+                    });
+                });
+
+                // নতুন ডাটা বা রিজেক্ট স্ট্যাটাস অনুযায়ী টাইম সর্টিং করা হচ্ছে
+                allRecords.sort((a, b) => {
+                    const timeA = a.claimedAt ? a.claimedAt.toMillis() : 0;
+                    const timeB = b.claimedAt ? b.claimedAt.toMillis() : 0;
+                    return timeB - timeA;
+                });
+
+                // পেজ রিফ্রেশ ছাড়াই কারেন্ট ফিল্টার অনুযায়ী লাইভ রেন্ডার হবে
+                renderFilteredRecords(currentActiveTab);
+
+            }, (error) => {
+                console.error("Snapshot Listening Error: ", error);
+                container.innerHTML = '<div class="no-data-box"><i class="fa-solid fa-triangle-exclamation"></i><span>Failed to sync records.</span></div>';
+            });
+        }
+
+        // --- রেকর্ড রেন্ডার এবং স্ট্যাটাস ফিল্টারিং লজিক ---
+        function renderFilteredRecords(statusFilter) {
+            const container = document.getElementById('records-container');
+            container.innerHTML = '';
+
+            const filtered = allRecords.filter(item => {
+                // ডাটাবেজে স্ট্যাটাস না থাকলে ডিফল্ট 'completed' ধরা হবে
+                const itemStatus = item.status ? item.status.toLowerCase().trim() : 'completed';
+                if(statusFilter === 'all') return true;
+                return itemStatus === statusFilter;
+            });
+
+            if(filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data-box">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <span>No records found for "${statusFilter}"</span>
+                    </div>`;
+                return;
+            }
+
+            filtered.forEach(record => {
+                const amount = parseFloat(record.amount || 0).toFixed(2);
+                const taskName = record.taskName || "Smart Mission";
+                
+                // স্ট্যাটাস টেক্সট ট্রিম ও লোয়ারকেস করা হলো নির্ভুল ম্যাচিংয়ের জন্য
+                const currentStatus = record.status ? record.status.toLowerCase().trim() : "completed"; 
+                
+                let dateString = "Just Now";
+                if(record.claimedAt) {
+                    const d = record.claimedAt.toDate();
+                    dateString = d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                }
+
+                // ডাইনামিক ক্লাস হ্যান্ডলার (পেন্ডিং, কমপ্লিট এবং রিজেক্টেড এর জন্য)
+                let badgeClass = "status-completed";
+                if(currentStatus === 'pending') badgeClass = "status-pending";
+                if(currentStatus === 'rejected') badgeClass = "status-rejected";
+
+                const cardHtml = `
+                    <div class="record-card">
+                        <div class="record-top">
+                            <span class="record-title">${taskName}</span>
+                            <span class="record-amount">+৳ ${amount}</span>
+                        </div>
+                        <div class="record-bottom">
+                            <span class="record-time"><i class="fa-regular fa-clock"></i> ${dateString}</span>
+                            <span class="status-badge ${badgeClass}">${currentStatus}</span>
+                        </div>
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', cardHtml);
+            });
+        }
+
+        // ট্যাব সুইচ করার গ্লোবাল ফাংশন
+        window.switchTab = (status, btnElement) => {
+            currentActiveTab = status;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            renderFilteredRecords(status);
+        };
+
+        // রিয়েল-টাইম ট্র্যাকিং ইঞ্জিন চালু করা হলো
+        listenUserRecords();
+    </script>
+</body>
+</html>

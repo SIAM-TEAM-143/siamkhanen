@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Profile Settings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7f6; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 400px; background: white; min-height: 100vh; position: relative; padding-bottom: 30px; }
+
+        /* Header */
+        .header { background-color: #00a651; color: white; padding: 15px; display: flex; align-items: center; font-size: 18px; font-weight: bold; position: sticky; top: 0; z-index: 100; }
+        .header i { margin-right: 15px; cursor: pointer; }
+
+        /* Profile Pic Section */
+        .avatar-section { text-align: center; padding: 30px 0; background: #fff; border-bottom: 1px solid #eee; }
+        .avatar-wrapper { position: relative; width: 110px; height: 110px; margin: 0 auto; }
+        #displayImg { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid #00a651; padding: 3px; }
+        .upload-btn { position: absolute; bottom: 5px; right: 5px; background: #00a651; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; border: 2px solid white; }
+
+        /* Form Section */
+        .form-content { padding: 25px 20px; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 13px; color: #666; margin-bottom: 8px; font-weight: 600; }
+        .input-group input { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 15px; outline: none; transition: 0.3s; }
+        .input-group input:focus { border-color: #00a651; box-shadow: 0 0 5px rgba(0,166,81,0.1); }
+
+        .save-btn { width: 100%; background: #00a651; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,166,81,0.2); transition: 0.3s; }
+        .save-btn:active { transform: scale(0.98); }
+
+        /* Loader */
+        #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(3px); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #00a651; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div id="loader-overlay">
+    <div class="spinner"></div>
+    <p style="color: white; margin-top: 15px; font-weight: 500;">Updating Profile...</p>
+</div>
+
+<div class="container">
+    <div class="header">
+        <i class="fa-solid fa-arrow-left" onclick="history.back()"></i>
+        <span>Account Settings</span>
+    </div>
+
+    <div class="avatar-section">
+        <div class="avatar-wrapper" onclick="document.getElementById('fileInput').click()">
+            <img id="displayImg" src="https://i.postimg.cc/KvG0G8YD/boy-profile-photo-cartoon-11152300-png-sw800.png">
+            <div class="upload-btn"><i class="fa-solid fa-camera"></i></div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        <p style="font-size: 12px; color: #888; margin-top: 10px;">Click image to change photo</p>
+    </div>
+
+    <div class="form-content">
+        <div class="input-group">
+            <label>Full Name</label>
+            <input type="text" id="userName" placeholder="Enter your name">
+        </div>
+
+        <div class="input-group">
+            <label>Phone Number</label>
+            <input type="tel" id="userPhone" placeholder="017XXXXXXXX">
+        </div>
+
+        <button class="save-btn" onclick="updateProfile()">SAVE CHANGES</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDbyV4futjEJjdAbR3dMNf6dOIhAuj7tTo",
+        authDomain: "task-2503d.firebaseapp.com",
+        projectId: "task-2503d",
+        appId: "1:707479242322:web:492db72a3b86653a0d018b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const userId = localStorage.getItem('currentUserId');
+
+    const displayImg = document.getElementById('displayImg');
+    const fileInput = document.getElementById('fileInput');
+    const nameInput = document.getElementById('userName');
+    const phoneInput = document.getElementById('userPhone');
+    const loader = document.getElementById('loader-overlay');
+
+    // ১. আগের ডাটা লোড করা
+    async function loadCurrentData() {
+        if (!userId) return window.location.replace('login.html');
+
+        // লোকাল স্টোরেজ থেকে ছবি চেক করা
+        const savedImg = localStorage.getItem('userProfilePic');
+        if (savedImg) displayImg.src = savedImg;
+
+        try {
+            const userSnap = await getDoc(doc(db, "users", userId));
+            if (userSnap.exists()) {
+                const data = userSnap.data();
+                nameInput.value = data.name || "";
+                phoneInput.value = data.phone || "";
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    // ২. প্রোফাইল পিকচার সিলেক্ট ও সেভ
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const base64Image = event.target.result;
+                displayImg.src = base64Image;
+                localStorage.setItem('userProfilePic', base64Image); // ছবি লোকাল স্টোরেজে সেভ থাকবে
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // ৩. নাম ও ফোন আপডেট করা
+    window.updateProfile = async () => {
+        const newName = nameInput.value.trim();
+        const newPhone = phoneInput.value.trim();
+
+        if (!newName || !newPhone) return alert("All fields are required!");
+
+        loader.style.display = 'flex';
+
+        try {
+            await updateDoc(doc(db, "users", userId), {
+                name: newName,
+                phone: newPhone
+            });
+            
+            alert("Profile Updated Successfully!");
+            window.location.replace('profile.html');
+        } catch (e) {
+            alert("Error updating profile: " + e.message);
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
+
+    loadCurrentData();
+</script>
+
+</body>
+</html>

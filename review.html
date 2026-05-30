@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amar Task - Review</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600&family=Hind+Siliguri:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="session.js"></script>
+    
+    <script>
+        if (!localStorage.getItem('currentUserId')) {
+            window.location.replace('login.html');
+        }
+    </script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: #f4f7f6; color: #333; }
+
+        /* --- Header --- */
+        .dashboard-header {
+            background: #00a651; padding: 20px; color: white;
+            border-bottom-left-radius: 30px; border-bottom-right-radius: 30px;
+            text-align: center; box-shadow: 0 10px 20px rgba(0,166,81,0.1);
+            position: relative;
+        }
+        .back-btn {
+            position: absolute; left: 20px; top: 25px;
+            font-size: 20px; color: white; cursor: pointer;
+        }
+        .user-avatar {
+            width: 80px; height: 80px; background: white; border-radius: 50%;
+            margin: 0 auto 10px; display: flex; justify-content: center;
+            align-items: center; border: 3px solid rgba(255,255,255,0.3);
+            overflow: hidden;
+        }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-avatar i { font-size: 40px; color: #00a651; }
+
+        /* --- Form Container --- */
+        .container { padding: 20px; max-width: 500px; margin: -30px auto 0; }
+        .form-card {
+            background: white; border-radius: 20px; padding: 25px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.05);
+        }
+        .form-card h2 { font-size: 20px; margin-bottom: 20px; color: #2c3e50; text-align: center; }
+
+        /* --- Star Rating Style --- */
+        .star-rating {
+            display: flex; flex-direction: row-reverse; justify-content: center;
+            gap: 10px; margin-bottom: 20px;
+        }
+        .star-rating input { display: none; }
+        .star-rating label { font-size: 35px; color: #ddd; cursor: pointer; transition: 0.3s; }
+        .star-rating input:checked ~ label,
+        .star-rating label:hover,
+        .star-rating label:hover ~ label { color: #ffc107; }
+
+        /* --- Input Styles --- */
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; font-size: 14px; color: #7f8c8d; }
+        .input-group input, .input-group textarea {
+            width: 100%; padding: 12px 15px; border-radius: 12px;
+            border: 1.5px solid #eee; background: #fbfbfb; font-family: inherit;
+            outline: none; transition: 0.3s;
+        }
+        .input-group textarea { height: 120px; resize: none; }
+        .input-group input:focus, .input-group textarea:focus { border-color: #00a651; background: #fff; }
+
+        /* --- Submit Button --- */
+        .submit-btn {
+            width: 100%; background: #00a651; color: white; border: none;
+            padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 600;
+            cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,166,81,0.2);
+        }
+        .submit-btn:hover { background: #008741; transform: translateY(-2px); }
+        .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+        #msg { text-align: center; margin-top: 15px; font-size: 14px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-header">
+        <i class="fa-solid fa-arrow-left back-btn" onclick="window.history.back()"></i>
+        <div class="user-avatar" id="profile-box">
+            <i class="fa-solid fa-user"></i>
+        </div>
+        <h3 id="display-name">Loading...</h3>
+        <p style="font-size: 12px; opacity: 0.8;">Submit your feedback for AMR TASK</p>
+    </div>
+
+    <div class="container">
+        <div class="form-card">
+            <h2>আপনার মতামত দিন</h2>
+            
+            <form id="reviewForm">
+                <div class="input-group">
+                    <label>আপনার নাম</label>
+                    <input type="text" id="userName" placeholder="আপনার নাম" readonly>
+                </div>
+
+                <div class="input-group">
+                    <label style="text-align: center; display: block;">রেটিং দিন</label>
+                    <div class="star-rating">
+                        <input type="radio" name="stars" id="star5" value="5" required><label for="star5">★</label>
+                        <input type="radio" name="stars" id="star4" value="4"><label for="star4">★</label>
+                        <input type="radio" name="stars" id="star3" value="3"><label for="star3">★</label>
+                        <input type="radio" name="stars" id="star2" value="2"><label for="star2">★</label>
+                        <input type="radio" name="stars" id="star1" value="1"><label for="star1">★</label>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>রিভিউ লিখুন</label>
+                    <textarea id="userReview" placeholder="আপনার অনুভূতি লিখুন..." required></textarea>
+                </div>
+
+                <button type="submit" id="subBtn" class="submit-btn">রিভিউ পাবলিশ করুন</button>
+                <p id="msg"></p>
+            </form>
+        </div>
+    </div>
+
+    <script src="session.js"></script>
+
+    <script>
+        // 1. Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbyV4futjEJjdAbR3dMNf6dOIhAuj7tTo",
+            authDomain: "task-2503d.firebaseapp.com",
+            databaseURL: "https://task-2503d-default-rtdb.firebaseio.com",
+            projectId: "task-2503d",
+            storageBucket: "task-2503d.firebasestorage.app",
+            messagingSenderId: "707479242322",
+            appId: "1:707479242322:web:492db72a3b86653a0d018b"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // 2. Load User Info from Session/LocalStorage
+        // ধরে নিচ্ছি তোমার session.js এ 'user_name' এবং 'user_img' সেভ করা আছে
+        const uName = localStorage.getItem('user_name') || "Guest User";
+        const uImg = localStorage.getItem('user_img') || "";
+
+        document.getElementById('userName').value = uName;
+        document.getElementById('display-name').innerText = uName;
+        if(uImg) {
+            document.getElementById('profile-box').innerHTML = `<img src="${uImg}">`;
+        }
+
+        // 3. Form Submit to Firebase
+        document.getElementById('reviewForm').onsubmit = function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('subBtn');
+            const msg = document.getElementById('msg');
+            
+            const name = document.getElementById('userName').value;
+            const review = document.getElementById('userReview').value;
+            const stars = document.querySelector('input[name="stars"]:checked').value;
+
+            btn.disabled = true;
+            btn.innerText = "Processing...";
+
+            // Push to Firebase
+            const reviewRef = database.ref('reviews');
+            reviewRef.push({
+                name: name,
+                photo: uImg, // Session থেকে আসা ইমেজ
+                stars: parseInt(stars),
+                comment: review,
+                timestamp: Date.now()
+            }).then(() => {
+                msg.style.display = 'block';
+                msg.style.color = '#00a651';
+                msg.innerText = "ধন্যবাদ! আপনার রিভিউ সফলভাবে পাবলিশ হয়েছে।";
+                document.getElementById('reviewForm').reset();
+                setTimeout(() => { window.history.back(); }, 2000);
+            }).catch((error) => {
+                btn.disabled = false;
+                btn.innerText = "রিভিউ পাবলিশ করুন";
+                alert("Error: " + error.message);
+            });
+        };
+    </script>
+</body>
+</html>

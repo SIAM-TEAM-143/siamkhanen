@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script>
+        if (!localStorage.getItem('currentUserId')) { window.location.replace('login.html'); }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - AMAR TASK</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'SF Pro Display',-apple-system,BlinkMacSystemFont,Roboto,sans-serif; }
+        body { background-color: #f8fafc; color: #1e293b; height: 100vh; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+
+        /* --- হেডার সেকশন --- */
+        .profile-header {
+            background: linear-gradient(135deg, #4f46e5, #3730a3);
+            color: white; padding: 30px 20px; text-align: center;
+            border-bottom-left-radius: 32px; border-bottom-right-radius: 32px;
+            position: relative; flex-shrink: 0;
+        }
+        .back-home-btn, .settings-toggle-btn {
+            position: absolute; top: 30px;
+            background: rgba(255,255,255,0.2); border: none; color: white;
+            width: 38px; height: 38px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; cursor: pointer; transition: 0.2s;
+        }
+        .back-home-btn { left: 20px; }
+        .settings-toggle-btn { right: 20px; }
+        .back-home-btn:active, .settings-toggle-btn:active { transform: scale(0.9); }
+        
+        .profile-header h2 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; margin-top: 5px; }
+
+        /* --- প্রোফাইল পিকচার --- */
+        .avatar-container { position: relative; width: 100px; height: 100px; margin: 20px auto 10px auto; }
+        .profile-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: 0 8px 16px rgba(0,0,0,0.15); }
+        
+        /* --- মেইন স্ক্রোল এরিয়া --- */
+        .profile-scroll-area { padding: 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 16px; padding-bottom: 120px; }
+        .profile-scroll-area::-webkit-scrollbar { display: none; }
+
+        /* --- ইনফো লিস্ট কার্ড --- */
+        .profile-card { background: white; border-radius: 20px; padding: 18px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; }
+        .card-title { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px; }
+        
+        .info-list { display: flex; flex-direction: column; gap: 14px; }
+        .info-item { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; }
+        .info-item:last-child { padding-bottom: 0; border-bottom: none; }
+        
+        .info-left { display: flex; align-items: center; gap: 12px; }
+        .info-icon { width: 36px; height: 36px; background: #eef2ff; color: #4f46e5; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .info-label { font-size: 12px; color: #64748b; font-weight: 600; }
+        .info-title { font-size: 14px; color: #0f172a; font-weight: 700; margin-top: 2px; }
+        
+        /* স্ট্যাটাস ব্যাজ */
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+        .badge-verified { background: #e0f2fe; color: #0369a1; }
+        .badge-unverified { background: #fee2e2; color: #b91c1c; }
+
+        /* কপি বাটন */
+        .copy-btn { background: #f1f5f9; border: none; color: #475569; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; margin-left: 8px; }
+        .copy-btn:active { background: #e2e8f0; }
+
+        /* লগআউট বাটন */
+        .btn-logout { background: #fee2e2; color: #ef4444; border: none; width: 100%; padding: 14px; border-radius: 16px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; transition: 0.2s; }
+        .btn-logout:active { transform: scale(0.98); }
+
+        /* --- আলাদা সেটিংস এডিট স্ক্রিন --- */
+        #settings-page {
+            position: fixed; top: 0; left: 100%; width: 100%; height: 100%;
+            background: #f8fafc; z-index: 500; transition: left 0.3s ease-in-out;
+            display: flex; flex-direction: column;
+        }
+        #settings-page.open { left: 0; }
+
+        .settings-header {
+            background: #fff; padding: 25px 20px; display: flex; align-items: center;
+            gap: 15px; border-bottom: 1px solid #e2e8f0;
+        }
+        .settings-back-btn {
+            background: #f1f5f9; border: none; color: #1e293b;
+            width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; cursor: pointer;
+        }
+        .settings-header h3 { font-size: 16px; font-weight: 700; color: #0f172a; }
+
+        .settings-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; flex: 1; overflow-y: auto; }
+        
+        .edit-avatar-box { position: relative; width: 90px; height: 90px; margin: 10px auto 20px auto; }
+        .edit-preview-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #4f46e5; }
+        .upload-icon-btn {
+            position: absolute; bottom: 0; right: 0;
+            background: #22c55e; color: white; width: 28px; height: 28px;
+            border-radius: 50%; border: 2px solid white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #file-input { display: none; }
+
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-label { font-size: 12px; font-weight: 700; color: #475569; }
+        .input-field { padding: 12px 16px; border-radius: 12px; border: 1px solid #cbd5e1; outline: none; font-size: 14px; font-weight: 600; background: white; color: #0f172a; transition: 0.2s; }
+        .input-field:focus { border-color: #4f46e5; }
+        .btn-save { background: #4f46e5; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .btn-save:active { transform: scale(0.97); }
+
+        /* --- কাস্টম ইন-অ্যাপ নোটিফিকেশন অ্যালার্ট (iOS Style) --- */
+        .custom-alert-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px);
+            z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .custom-alert-box {
+            background: white; width: 100%; max-width: 320px; border-radius: 24px;
+            padding: 24px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            transform: scale(0.9); transition: 0.2s ease-out;
+        }
+        .custom-alert-overlay.show { display: flex; }
+        .custom-alert-overlay.show .custom-alert-box { transform: scale(1); }
+        .alert-icon-box { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 24px; }
+        .alert-icon-warn { background: #fee2e2; color: #ef4444; }
+        .alert-icon-success { background: #dcfce7; color: #22c55e; }
+        .alert-icon-info { background: #eef2ff; color: #4f46e5; }
+        .alert-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+        .alert-desc { font-size: 14px; color: #64748b; font-weight: 500; line-height: 1.4; margin-bottom: 24px; }
+        .alert-buttons { display: flex; gap: 12px; }
+        .alert-btn { flex: 1; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; transition: 0.1s; }
+        .alert-btn-cancel { background: #f1f5f9; color: #475569; }
+        .alert-btn-confirm { background: #ef4444; color: white; }
+        .alert-btn-success { background: #4f46e5; color: white; }
+
+        /* --- কাস্টম পার্সেন্টেজ লোডার ওভারলে (%) --- */
+        #loader-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); 
+            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; 
+        }
+        .loader-container { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
+        .premium-spinner { 
+            position: absolute; width: 100%; height: 100%; 
+            border: 4px solid #f1f5f9; border-top: 4px solid #4f46e5; 
+            border-radius: 50%; animation: spin 0.8s linear infinite; 
+        }
+        .loader-text-pct { font-size: 16px; font-weight: 800; color: #1e293b; position: relative; z-index: 10; }
+        .loader-msg { font-size: 13px; font-weight: 700; color: #64748b; margin-top: 16px; letter-spacing: 0.3px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* বটম নেভিগেশন */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 20px 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.03); border-top-left-radius: 24px; border-top-right-radius: 24px; z-index: 20; }
+        .nav-item { text-align: center; color: #94a3b8; text-decoration: none; font-size: 11px; flex: 1; cursor: pointer; font-weight: 600; }
+        .nav-item.active { color: #4f46e5; }
+        .nav-item i { font-size: 20px; display: block; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+    <!-- পার্সেন্টেজ (%) লোডার প্যানেল -->
+    <div id="loader-overlay">
+        <div class="loader-container">
+            <div class="premium-spinner"></div>
+            <span class="loader-text-pct" id="upload-pct">0%</span>
+        </div>
+        <p class="loader-msg" id="loader-msg-text">Processing...</p>
+    </div>
+
+    <!-- কাস্টম নোটিফিকেশন অ্যালার্ট ডায়ালগ -->
+    <div class="custom-alert-overlay" id="custom-alert">
+        <div class="custom-alert-box">
+            <div class="alert-icon-box id-alert-icon-theme" id="alert-icon-div">
+                <i id="alert-main-icon" class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="alert-title" id="alert-box-title">Are you sure?</h4>
+            <p class="alert-desc" id="alert-box-desc">Do you really want to perform this action?</p>
+            <div class="alert-buttons" id="alert-action-buttons">
+                <!-- ডায়নামিক বাটন এখানে ইনজেক্ট হবে -->
+            </div>
+        </div>
+    </div>
+
+    <!-- হেডার ও মেইন প্রোফাইল ইমেজ ভিউ -->
+    <div class="profile-header">
+        <button class="back-home-btn" onclick="navigateTo('home.html')"><i class="fa-solid fa-arrow-left"></i></button>
+        <h2>My Account</h2>
+        
+        <button class="settings-toggle-btn" id="open-settings-btn"><i class="fa-solid fa-gear"></i></button>
+        
+        <div class="avatar-container">
+            <img id="user-display-avatar" src="https://i.postimg.cc/KvG0G8YD/boy-profile-photo-cartoon-11152300-png-sw800.png" class="profile-avatar">
+        </div>
+    </div>
+
+    <!-- মেইন প্রোফাইল ডাটা ভিউ এরিয়া -->
+    <div class="profile-scroll-area">
+        
+        <div class="profile-card">
+            <p class="card-title">Personal Details</p>
+            <div class="info-list">
+                
+                <!-- অ্যাকাউন্ট স্ট্যাটাস -->
+                <div class="info-item">
+                    <div class="info-left">
+                        <div class="info-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div>
+                            <p class="info-label">Account Status</p>
+                            <p class="info-title" id="info-status">Loading...</p>
+                        </div>
+                    </div>
+                    <div id="status-badge-box"></div>
+                </div>
+
+                <!-- ফোন নাম্বার -->
+                <div class="info-item">
+                    <div class="info-left">
+                        <div class="info-icon"><i class="fa-solid fa-phone"></i></div>
+                        <div>
+                            <p class="info-label">Phone Number</p>
+                            <p class="info-title" id="info-phone">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ইমেইল এড্রেস -->
+                <div class="info-item">
+                    <div class="info-left">
+                        <div class="info-icon"><i class="fa-solid fa-envelope"></i></div>
+                        <div>
+                            <p class="info-label">Email Address</p>
+                            <p class="info-title" id="info-email">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- জন্মতারিখ -->
+                <div class="info-item">
+                    <div class="info-left">
+                        <div class="info-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                        <div>
+                            <p class="info-label">Date of Birth</p>
+                            <p class="info-title" id="info-dob">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ইউজার আইডি (UID) -->
+                <div class="info-item">
+                    <div class="info-left">
+                        <div class="info-icon"><i class="fa-solid fa-fingerprint"></i></div>
+                        <div>
+                            <p class="info-label">User UID</p>
+                            <p class="info-title" id="info-uid" style="font-size: 11px; color:#64748b;">Loading...</p>
+                        </div>
+                    </div>
+                    <button class="copy-btn" id="copy-uid-btn">Copy</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- লগআউট বাটন -->
+        <button class="btn-logout" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Log Out Account</button>
+
+    </div>
+
+    <!-- --- আলাদা সেটিংস এডিট স্ক্রিন --- -->
+    <div id="settings-page">
+        <div class="settings-header">
+            <button class="settings-back-btn" id="close-settings-btn"><i class="fa-solid fa-arrow-left"></i></button>
+            <h3>Edit Account Profile</h3>
+        </div>
+        <div class="settings-body">
+            
+            <div class="edit-avatar-box">
+                <img id="edit-preview-avatar" src="https://i.postimg.cc/KvG0G8YD/boy-profile-photo-cartoon-11152300-png-sw800.png" class="edit-preview-avatar">
+                <label for="file-input" class="upload-icon-btn">
+                    <i class="fa-solid fa-camera"></i>
+                </label>
+                <input type="file" id="file-input" accept="image/*">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">FULL NAME</label>
+                <input type="text" id="username-input" class="input-field" placeholder="Enter new name">
+            </div>
+
+            <button class="btn-save" id="save-name-btn">Save Updates</button>
+        </div>
+    </div>
+
+    <!-- বটম নেভিগেশন বার -->
+    <nav class="bottom-nav">
+        <div class="nav-item" onclick="navigateTo('home.html')"><i class="fa-solid fa-house-chimney-window"></i>Home</div>
+        <div class="nav-item" onclick="navigateTo('order.html')"><i class="fa-solid fa-receipt"></i>History</div>
+        <div class="nav-item" onclick="navigateTo('share.html')"><i class="fa-solid fa-diagram-project"></i>Team</div>
+        <div class="nav-item active" onclick="navigateTo('profile.html')"><i class="fa-solid fa-user-gear"></i>Profile</div>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbyV4futjEJjdAbR3dMNf6dOIhAuj7tTo",
+            authDomain: "task-2503d.firebaseapp.com",
+            projectId: "task-2503d",
+            appId: "1:707479242322:web:492db72a3b86653a0d018b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const userId = localStorage.getItem('currentUserId');
+        const loaderOverlay = document.getElementById('loader-overlay');
+        const pctText = document.getElementById('upload-pct');
+        const msgText = document.getElementById('loader-msg-text');
+
+        // --- কাস্টম পার্সেন্টেজ (%) রানার ফাংশন ---
+        function runPercentageLoader(targetMsg, duration, callback) {
+            loaderOverlay.style.display = 'flex';
+            msgText.innerText = targetMsg;
+            let currentPct = 0;
+            pctText.innerText = `0%`;
+
+            const intervalStep = duration / 100;
+            const timer = setInterval(() => {
+                currentPct++;
+                pctText.innerText = `${currentPct}%`;
+
+                if (currentPct >= 100) {
+                    clearInterval(timer);
+                    setTimeout(() => {
+                        loaderOverlay.style.display = 'none';
+                        if (callback) callback();
+                    }, 200);
+                }
+            }, intervalStep);
+        }
+
+        // --- ইন-অ্যাপ কাস্টম অ্যালার্ট সিস্টেম ফাংশন ---
+        function showCustomAlert(type, title, description, confirmCallback) {
+            const alertOverlay = document.getElementById('custom-alert');
+            const iconDiv = document.getElementById('alert-icon-div');
+            const mainIcon = document.getElementById('alert-main-icon');
+            const btnBox = document.getElementById('alert-action-buttons');
+
+            document.getElementById('alert-box-title').innerText = title;
+            document.getElementById('alert-box-desc').innerText = description;
+
+            // থিম সেটআপ
+            iconDiv.className = "alert-icon-box"; 
+            if (type === 'warn') {
+                iconDiv.classList.add('alert-icon-warn');
+                mainIcon.className = "fa-solid fa-triangle-exclamation";
+            } else if (type === 'success') {
+                iconDiv.classList.add('alert-icon-success');
+                mainIcon.className = "fa-solid fa-circle-check";
+            } else {
+                iconDiv.classList.add('alert-icon-info');
+                mainIcon.className = "fa-solid fa-circle-info";
+            }
+
+            // বাটন কন্ট্রোল
+            btnBox.innerHTML = '';
+            if (confirmCallback) {
+                // Confirm টাইপ অ্যালার্ট (যেমন: লগআউট)
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = "alert-btn alert-btn-cancel";
+                cancelBtn.innerText = "Cancel";
+                cancelBtn.onclick = () => alertOverlay.classList.remove('show');
+
+                const actionBtn = document.createElement('button');
+                actionBtn.className = "alert-btn alert-btn-confirm";
+                actionBtn.innerText = type === 'warn' ? "Yes, Confirm" : "Continue";
+                actionBtn.onclick = () => {
+                    alertOverlay.classList.remove('show');
+                    confirmCallback();
+                };
+
+                btnBox.appendChild(cancelBtn);
+                btnBox.appendChild(actionBtn);
+            } else {
+                // সাধারণ অ্যালার্ট নোটিফিকেশন (যেমন: সাকসেস মেসেজ)
+                const okBtn = document.createElement('button');
+                okBtn.className = "alert-btn alert-btn-success";
+                okBtn.innerText = "OK";
+                okBtn.onclick = () => alertOverlay.classList.remove('show');
+                btnBox.appendChild(okBtn);
+            }
+
+            alertOverlay.classList.add('show');
+        }
+
+        // --- লোকাল ক্যাশ থেকে ডাটা রেন্ডার (Instant Load) ---
+        function loadCachedData() {
+            const cachedAvatar = localStorage.getItem('userProfilePic');
+            if (cachedAvatar) {
+                document.getElementById('user-display-avatar').src = cachedAvatar;
+                document.getElementById('edit-preview-avatar').src = cachedAvatar;
+            }
+
+            const localData = localStorage.getItem(`user_profile_${userId}`);
+            if (localData) {
+                renderUI(JSON.parse(localData));
+            } else {
+                document.getElementById('info-uid').innerText = userId;
+            }
+        }
+
+        function renderUI(data) {
+            document.getElementById('username-input').value = data.name || "";
+            document.getElementById('info-status').innerText = data.status === "verified" || data.verified === true ? "Verified Account" : "Unverified User";
+            document.getElementById('info-phone').innerText = data.phone || "Not Set";
+            document.getElementById('info-email').innerText = data.email || "Not Set";
+            document.getElementById('info-dob').innerText = data.dob || data.birthdate || "Not Provided";
+            document.getElementById('info-uid').innerText = userId;
+
+            const badgeBox = document.getElementById('status-badge-box');
+            if (data.status === "verified" || data.verified === true) {
+                badgeBox.innerHTML = '<span class="status-badge badge-verified"><i class="fa-solid fa-circle-check"></i> Verified</span>';
+            } else {
+                badgeBox.innerHTML = '<span class="status-badge badge-unverified"><i class="fa-solid fa-circle-xmark"></i> Unverified</span>';
+            }
+        }
+
+        // সেটিংস পেজ টগল
+        document.getElementById('open-settings-btn').onclick = () => {
+            document.getElementById('settings-page').classList.add('open');
+        };
+        document.getElementById('close-settings-btn').onclick = () => {
+            document.getElementById('settings-page').classList.remove('open');
+        };
+
+        // ব্যাকগ্রাউন্ড রিয়েল-টাইম ডাটা লিসেনার
+        function listenProfileData() {
+            if (!userId) return;
+            onSnapshot(doc(db, "users", userId), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    renderUI(data);
+                    localStorage.setItem(`user_profile_${userId}`, JSON.stringify(data));
+                }
+            });
+        }
+
+        // প্রোফাইল নাম সেভ লজিক
+        document.getElementById('save-name-btn').onclick = async () => {
+            const newName = document.getElementById('username-input').value.trim();
+            if (!newName) { 
+                showCustomAlert('warn', 'Empty Name!', 'Please enter a valid name first.');
+                return; 
+            }
+            
+            runPercentageLoader("Updating profiles...", 1200, async () => {
+                try {
+                    await updateDoc(doc(db, "users", userId), { name: newName });
+                    document.getElementById('settings-page').classList.remove('open');
+                    setTimeout(() => {
+                        showCustomAlert('success', 'Profile Saved!', 'Your display name has been updated.');
+                    }, 300);
+                } catch (e) {
+                    console.error(e);
+                    showCustomAlert('warn', 'Error!', 'Failed to connect to backend.');
+                }
+            });
+        };
+
+        // ইমেজ আপলোড ও কনভার্ট মেথড
+        document.getElementById('file-input').onchange = function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                
+                runPercentageLoader("Uploading Avatar...", 1500, () => {
+                    reader.onload = function (e) {
+                        const base64Image = e.target.result;
+                        document.getElementById('user-display-avatar').src = base64Image;
+                        document.getElementById('edit-preview-avatar').src = base64Image;
+                        localStorage.setItem('userProfilePic', base64Image);
+                        setTimeout(() => {
+                            showCustomAlert('success', 'Avatar Uploaded!', 'Profile picture saved successfully.');
+                        }, 200);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        };
+
+        // কপি UID
+        document.getElementById('copy-uid-btn').onclick = () => {
+            navigator.clipboard.writeText(userId);
+            const btn = document.getElementById('copy-uid-btn');
+            btn.innerText = "Copied!";
+            setTimeout(() => { btn.innerText = "Copy"; }, 1500);
+        };
+
+        // কাস্টম নোটিফিকেশন অ্যালার্টের মাধ্যমে লগআউট অ্যাকশন
+        document.getElementById('logout-btn').onclick = () => {
+            showCustomAlert('warn', 'Sign Out?', 'Are you sure you want to secure log out from AMAR TASK?', () => {
+                runPercentageLoader("Clearing user session...", 1000, () => {
+                    localStorage.removeItem('currentUserId');
+                    localStorage.removeItem('userProfilePic'); 
+                    localStorage.removeItem(`user_profile_${userId}`);
+                    window.location.replace('login.html');
+                });
+            });
+        };
+
+        // পেজ ট্রানজিশন নেভিগেশন
+        window.navigateTo = (url) => {
+            runPercentageLoader("Redirecting...", 600, () => {
+                window.location.href = url;
+            });
+        };
+
+        // রান মেকানিজম
+        loadCachedData();
+        listenProfileData();
+    </script>
+</body>
+</html>
