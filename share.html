@@ -181,17 +181,9 @@
     </div>
 </div>
 
-<script>
-    function goBack() {
-        document.getElementById('loader-overlay').style.display = 'flex';
-        setTimeout(() => { window.location.replace('home.html'); }, 600);
-    }
-    document.onkeydown = (e) => { if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73)) return false; };
-</script>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, query, where, getDocs, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, query, where, getDocs, updateDoc, increment, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDbyV4futjEJjdAbR3dMNf6dOIhAuj7tTo",
@@ -209,6 +201,7 @@
     const toastIcon = document.getElementById('toast-icon');
 
     window.showNotification = (message, type = "success") => {
+        if(!toast) return;
         toastMsg.innerText = message;
         if(type === "success") {
             toastIcon.className = "fa-solid fa-circle-check";
@@ -223,36 +216,59 @@
 
     let activeHistoryListener = null;
 
+    // অটোমেটিক ইউনিক রিফার কোড জেনারেটর ফিক্স
+    function generateRandomCode(length = 6) {
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let code = "";
+        for (let i = 0; i < length; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return code;
+    }
+
     async function initReferralPage() {
         if(!currentUserId) return;
 
-        onSnapshot(doc(db, "users", currentUserId), (snap) => {
+        const userRef = doc(db, "users", currentUserId);
+
+        onSnapshot(userRef, async (snap) => {
             if (snap.exists()) {
                 const data = snap.data();
-                const code = data.myReferCode || "CODE ERROR";
+                let code = data.myReferCode;
+
+                // যদি ডাটাবেসে রিফার কোড না থাকে, তবে অটো জেনারেট করে সেভ করবে
+                if (!code || code === "CODE ERROR" || code.trim() === "") {
+                    code = "AMR" + generateRandomCode(4);
+                    await updateDoc(userRef, { myReferCode: code });
+                }
+
                 document.getElementById('myReferCode').innerText = code;
                 document.getElementById('lifetimeBonus').innerText = "৳ " + (data.totalReferEarn || 0).toFixed(2);
                 document.getElementById('todayBonus').innerText = "৳ " + (data.pendingCommission || 0).toFixed(2);
                 document.getElementById('claimCommBtn').disabled = (data.pendingCommission || 0) < 0.1;
                 
-                // শুধুমাত্র কোড পরিবর্তন হলে বা প্রথমবার লিসেনার চালু করবে
-                if(!activeHistoryListener && code !== "CODE ERROR") {
+                if(!activeHistoryListener && code) {
                     listenReferralList(code);
                 }
             }
         });
     }
 
-    // --- ফিক্সড: রিয়েল-টাইম হিস্ট্রি রিড লিসেনার (onSnapshot) ---
     function listenReferralList(code) {
         const q = query(collection(db, "users"), where("referBy", "==", code));
         
         activeHistoryListener = onSnapshot(q, (snap) => {
             const listContainer = document.getElementById('referralList');
-            listContainer.innerHTML = snap.empty ? '<p style="text-align:center; color:#bbb; font-size:12px; margin-top: 30px;">No friends joined yet.</p>' : "";
             
-            snap.forEach(doc => {
-                const u = doc.data();
+            if (snap.empty) {
+                listContainer.innerHTML = '<p style="text-align:center; color:#bbb; font-size:12px; margin-top: 30px;">No friends joined yet.</p>';
+                document.getElementById('totalInvites').innerText = 0;
+                return;
+            }
+
+            let cardsHtml = "";
+            snap.forEach(docSnap => {
+                const u = docSnap.data();
                 const status = u.status ? u.status.toLowerCase() : "unverified";
                 const balance = u.balance || 0;
                 const todayIncome = u.todayIncome || 0;
@@ -266,7 +282,7 @@
                 if(status === "active" || status === "verified") badgeClass = "tag-active";
                 if(status === "blocked") badgeClass = "tag-blocked";
 
-                listContainer.innerHTML += `
+                cardsHtml += `
                     <div class="referral-card">
                         <div class="card-top">
                             <div class="user-meta">
@@ -285,6 +301,7 @@
                     </div>`;
             });
             
+            listContainer.innerHTML = cardsHtml;
             document.getElementById('totalInvites').innerText = snap.size;
         }, (error) => {
             console.error("History snapshot failed:", error);
@@ -299,15 +316,16 @@
         try {
             const userRef = doc(db, "users", currentUserId);
             const userSnap = await getDoc(userRef);
-            const amount = userSnap.data().pendingCommission || 0;
-
-            if(amount > 0) {
-                await updateDoc(userRef, {
-                    balance: increment(amount),
-                    pendingCommission: 0,
-                    totalReferEarn: increment(amount)
-                });
-                showNotification(`Successfully claimed Today's Bonus ৳${amount.toFixed(2)}!`, "success");
+            if(userSnap.exists()){
+                const amount = userSnap.data().pendingCommission || 0;
+                if(amount > 0) {
+                    await updateDoc(userRef, {
+                        balance: increment(amount),
+                        pendingCommission: 0,
+                        totalReferEarn: increment(amount)
+                    });
+                    showNotification(`Successfully claimed Today's Bonus ৳${amount.toFixed(2)}!`, "success");
+                }
             }
         } catch (e) { 
             showNotification("Claim failed! Network error.", "error"); 
@@ -317,6 +335,7 @@
 
     window.copyCode = () => {
         const code = document.getElementById('myReferCode').innerText;
+        if(code === "---" || code === "CODE ERROR") return;
         navigator.clipboard.writeText(code).then(() => {
             showNotification("Refer Code Copied: " + code, "success");
         }).catch(() => {
@@ -324,19 +343,22 @@
         });
     };
 
-    window.shareLink = () => {
+        window.shareLink = () => {
         const code = document.getElementById('myReferCode').innerText;
-        const text = `🚀 Join our platform and start earning daily! Use my Refer Code: ${code} to sign up.`;
+        
+        // বাংলা ভিআইপি টেক্সট ফরম্যাট
+        const text = `🔥 ঘরে বসে প্রতিদিন নিশ্চিত ইনকামের দারুণ সুযোগ! 🔥\n\n🚀 আমাদের VIP AMAR TASK প্ল্যাটফর্মে জয়েন করুন আর প্রতিদিন আনলিমিটেড টাকা আয় করুন!\n\nএখানে যা যা কাজ পাবেন:\n✅ Ads দেখে আয় 📺\n✅ Apps ডাউনলোড করে আয় 📲\n✅ সহজ Surveys কমপ্লিট করে আয় 📝\n✅ রেফার করে বিশাল বোনাস 🎁\n\n🔗 জয়েনিং লিঙ্ক: https://t.me/Amrtask_bot  👑 আমার ভিআইপি রিফার কোড : 👉 ${code} 👈\n\nধামাকা ওয়েলকাম বোনাস আনলক করতে এখনই রিফার কোডটি ব্যবহার করে জয়েন করুন! 💰👑`;
+        
         if (navigator.share) {
-            navigator.share({ title: 'Invite Friends', text: text, url: window.location.origin });
+            navigator.share({ title: 'VIP Invitation', text: text, url: window.location.origin });
         } else {
             navigator.clipboard.writeText(text);
-            showNotification("Invite link text copied to clipboard!", "success");
+            showNotification("VIP Invite text copied to clipboard!", "success");
         }
     };
 
     initReferralPage();
 </script>
+
 </body>
 </html>
-
