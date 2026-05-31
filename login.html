@@ -47,6 +47,11 @@
         .input-group i.input-icon { position: absolute; left: 12px; top: 38px; color: #00a651; }
         .input-group i.toggle-pass { position: absolute; right: 12px; top: 38px; color: #999; cursor: pointer; }
 
+        /* ফরগট পাসওয়ার্ড লিঙ্ক স্টাইল */
+        .forgot-pass-wrap { text-align: right; margin-top: -12px; margin-bottom: 22px; }
+        .forgot-pass-wrap a { color: #888; font-size: 12px; text-decoration: none; font-weight: 500; cursor: pointer; transition: 0.2s; }
+        .forgot-pass-wrap a:hover { color: #00a651; }
+
         .btn-login { 
             width: 100%; background: #00a651; color: white; border: none; padding: 15px; 
             border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; 
@@ -132,6 +137,11 @@
             <i class="fa-solid fa-lock input-icon"></i>
             <input type="password" id="password" placeholder="Enter password">
             <i class="fa-solid fa-eye-slash toggle-pass" onclick="togglePass()"></i>
+        </div>
+
+        <!-- ফিক্সড: পাসওয়ার্ড ফিল্ডের নিচে ডানপাশে Forgot Password যুক্ত করা হয়েছে -->
+        <div class="forgot-pass-wrap">
+            <a onclick="location.href='forget.html'">Forgot Password?</a>
         </div>
 
         <button class="btn-login" id="loginBtn" onclick="handleLogin()">
