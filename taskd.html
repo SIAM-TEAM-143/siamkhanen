@@ -160,7 +160,7 @@
         if (!taskId) { window.location.href = 'home.html'; }
 
         async function loadTaskData() {
-            showLoader("Fetching Mission Parameters...");
+            showLoader("Please Wait...");
             try {
                 const docSnap = await getDoc(doc(db, "tasks", taskId));
                 if (!docSnap.exists()) { alert("Mission offline"); window.location.href='home.html'; return; }
