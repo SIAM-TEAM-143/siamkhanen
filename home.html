@@ -14,7 +14,6 @@
     <style> 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'SF Pro Display',-apple-system,BlinkMacSystemFont,Roboto,sans-serif; }
         
-        /* ফুল পেজ স্ক্রোল এনাবল করার জন্য হাইট অটো এবং ওভারফ্লো ঠিক করা হয়েছে */
         body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; padding-bottom: 100px; }
 
         /* --- ইন-অ্যাপ নোটিফিকেশন টোস্ট --- */
@@ -30,52 +29,58 @@
         #toast-alert-icon { font-size: 18px; color: #38bdf8; }
         #toast-alert-msg { font-size: 13px; font-weight: 700; color: #ffffff; line-height: 1.4; }
 
-        /* --- টেলিগ্রাম ও অ্যাডমিন নোটিশ জয়েন্ট পপআপ মডাল --- */
+        /* --- 🔥 আল্ট্রা লাক্সারি টেলিগ্রাম ও অ্যাডমিন নোটিশ পপআপ মডাল --- */
         #tg-popup-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(10px);
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px);
             display: flex; align-items: center; justify-content: center;
-            z-index: 500000; padding: 20px; opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease;
+            z-index: 500000; padding: 24px; opacity: 0; pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         #tg-popup-overlay.show { opacity: 1; pointer-events: auto; }
         
         .tg-popup-card {
-            background: #ffffff; width: 100%; max-width: 350px;
-            border-radius: 28px; padding: 25px 20px; text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            position: relative; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: linear-gradient(180deg, #ffffff, #f8fafc); width: 100%; max-width: 360px;
+            border-radius: 32px; padding: 30px 24px; text-align: center;
+            box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.3), 0 0 0 1px rgba(15, 23, 42, 0.05);
+            position: relative; transform: translateY(40px) scale(0.92); opacity: 0;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        #tg-popup-overlay.show .tg-popup-card { transform: scale(1); }
+        #tg-popup-overlay.show .tg-popup-card { transform: translateY(0) scale(1); opacity: 1; }
         
         .tg-popup-close {
-            position: absolute; top: 16px; right: 16px;
-            background: #f1f5f9; border: none; width: 32px; height: 32px;
-            border-radius: 50%; color: #64748b; font-size: 14px; cursor: pointer;
+            position: absolute; top: 18px; right: 18px;
+            background: #f1f5f9; border: none; width: 34px; height: 34px;
+            border-radius: 50%; color: #475569; font-size: 14px; cursor: pointer;
             display: flex; align-items: center; justify-content: center; transition: 0.2s;
         }
         .tg-popup-close:active { transform: scale(0.9); background: #e2e8f0; }
         
         .tg-icon-box {
-            width: 65px; height: 65px; background: #e0f2fe; color: #0284c7;
-            border-radius: 22px; display: flex; align-items: center; justify-content: center;
-            font-size: 32px; margin: 0 auto 15px auto;
+            width: 76px; height: 76px; background: linear-gradient(135deg, #e0f2fe, #bae6fd); color: #0284c7;
+            border-radius: 26px; display: flex; align-items: center; justify-content: center;
+            font-size: 38px; margin: 0 auto 18px auto; box-shadow: 0 10px 20px -5px rgba(2, 132, 199, 0.2);
+            animation: pulseTg 2s infinite;
         }
-        .tg-popup-card h3 { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
-        .tg-popup-card p { font-size: 13px; font-weight: 600; color: #64748b; line-height: 1.4; margin-bottom: 14px; }
+        @keyframes pulseTg { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+        .tg-popup-card h3 { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 8px; letter-spacing: -0.3px; }
+        .tg-popup-card p { font-size: 13px; font-weight: 600; color: #475569; line-height: 1.5; margin-bottom: 18px; }
         
         .admin-popup-notice-area {
-            background: #f0fdf4; border: 1px dashed #bbf7d0; border-radius: 14px;
-            padding: 12px; font-size: 12px; font-weight: 600; color: #166534;
-            text-align: left; max-height: 100px; overflow-y: auto; margin-bottom: 20px; line-height: 1.5;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #bbf7d0; border-radius: 16px;
+            padding: 14px; font-size: 12px; font-weight: 600; color: #14532d;
+            text-align: left; max-height: 110px; overflow-y: auto; margin-bottom: 22px; line-height: 1.6;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
         }
         .tg-join-btn {
-            background: linear-gradient(135deg, #0284c7, #0369a1); color: white;
-            border: none; width: 100%; padding: 14px; border-radius: 14px;
-            font-size: 14px; font-weight: 700; cursor: pointer; display: flex;
-            align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+            background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white;
+            border: none; width: 100%; padding: 15px; border-radius: 16px;
+            font-size: 15px; font-weight: 700; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px -4px rgba(2, 132, 199, 0.4);
+            transition: 0.2s;
         }
-        .tg-join-btn:active { transform: scale(0.97); }
+        .tg-join-btn:active { transform: scale(0.97); filter: brightness(0.95); }
 
         /* --- সবুজ নোটিফিকেশন প্যানেল (Full Screen Slide) --- */
         #notification-panel { 
@@ -141,7 +146,7 @@
         .action-item:hover .action-icon { background: #eef2ff; color: #4f46e5; }
         .action-item span { font-size: 9px; font-weight: 600; color: #475569; display: block; white-space: nowrap; }
 
-        /* ভেরিফিকেশন অ্যালার্ট বক্স */
+        /* ভেরিফিকেশন অ্যালার্ট باکس */
         .verification-alert-box { display: none; background: linear-gradient(135deg, #fee2e2, #fecaca); border: 1px solid #fca5a5; border-radius: 20px; padding: 15px; margin: 0 20px 15px 20px; align-items: center; gap: 14px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1); cursor: pointer; transition: 0.2s; flex-shrink: 0; }
         .verification-alert-box:active { transform: scale(0.98); }
         .verify-box-img { width: 50px; height: 50px; object-fit: contain; }
@@ -187,7 +192,6 @@
         }
         .premium-task-card:active { transform: translateY(2px) scale(0.98); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         
-        /* গ্লাস মরফিজম গ্লো ইফেক্ট অন হোভার/অ্যাক্টিভ */
         .premium-task-card::before {
             content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
             background: linear-gradient(to bottom, #6366f1, #4f46e5); border-radius: 4px;
@@ -196,9 +200,8 @@
         .task-thumb-wrapper { position: relative; flex-shrink: 0; }
         .task-thumb { width: 68px; height: 68px; border-radius: 18px; object-fit: cover; background: #f1f5f9; border: 1px solid #f1f5f9; }
         
-        /* ছোট গোল্ডেন মেডেল ব্যাজ ছবির ওপরে */
         .task-badge-icon {
-            position: absolute; -top: 6px; -left: 6px; background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            position: absolute; top: -6px; left: -6px; background: linear-gradient(135deg, #fbbf24, #f59e0b);
             color: white; width: 18px; height: 18px; border-radius: 50%; display: flex;
             align-items: center; justify-content: center; font-size: 9px; box-shadow: 0 2px 4px rgba(0,0,0,0.15);
         }
@@ -214,7 +217,6 @@
 
         .task-reward-tag { text-align: right; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; padding-left: 5px; }
         
-        /* প্রিমিয়াম লাক্সারি লাইভ প্রাইজ ট্যাগ */
         .reward-box-wrapper { background: linear-gradient(135deg, #ecfdf5, #d1fae5); padding: 6px 10px; border-radius: 12px; border: 1px solid #a7f3d0; text-align: center; min-width: 65px; }
         .reward-payout { font-size: 13px; font-weight: 900; color: #059669; }
         .reward-label { font-size: 8px; font-weight: 700; color: #047857; text-transform: uppercase; margin-top: 1px; display: block; }
@@ -235,7 +237,7 @@
         .review-btn-close { background: #f1f5f9; color: #475569; padding: 11px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; font-size: 13px; }
         @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        /* বটম নেভিগেশন - ফিক্সড পজিশন এবং ফুল স্ক্রোল ফ্রেন্ডলি */
+        /*行业 বটম নেভিগেশন */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 20px 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); border-top-left-radius: 24px; border-top-right-radius: 24px; z-index: 40000; }
         .nav-item { text-align: center; color: #94a3b8; text-decoration: none; font-size: 11px; flex: 1; cursor: pointer; font-weight: 600; }
         .nav-item.active { color: #4f46e5; }
@@ -391,11 +393,11 @@
         let globalAdminNotice = ""; 
         let isNewUser = false;
         let isUserVerified = false; 
+        let isTaskNavigating = false; // ডাবল-ক্লিক টাস্ক ফায়ার রোধ করার ফ্ল্যাগ লক
 
         const savedImage = localStorage.getItem('userProfilePic');
         if (savedImage) document.getElementById('top-user-avatar').src = savedImage;
 
-        // পপআপ ক্লোজ হ্যান্ডলার
         document.getElementById('btn-close-tg-popup').onclick = () => {
             document.getElementById('tg-popup-overlay').classList.remove('show');
         };
@@ -452,7 +454,16 @@
             if(localStorage.getItem('cached_balance')) {
                 document.getElementById('user-balance').innerText = `৳ ${localStorage.getItem('cached_balance')}`;
             }
-            syncTasksOnly(false);
+            
+            // ফোনের লোকাল মেমোরি (localStorage) থেকে ক্যাশড টাস্ক থাকলে তা ইনস্ট্যান্ট রেন্ডার করবে
+            const cachedTasks = localStorage.getItem('local_cached_tasks');
+            if(cachedTasks) {
+                renderTasks(JSON.parse(cachedTasks));
+                syncTasksOnly(false); // ব্যাকগ্রাউন্ডে চেক করবে চেঞ্জ হয়েছে কিনা
+            } else {
+                syncTasksOnly(true);
+            }
+            
             listenUserDataAndConfig();
         }
 
@@ -492,16 +503,15 @@
                         
                         if (data.home_notice) {
                             globalAdminNotice = data.home_notice;
-                            // পপআপ বক্সে লাইভ নোটিশ যুক্ত করা হচ্ছে
                             document.getElementById('popup-live-admin-notice').innerText = "📢 নোটিশ: " + globalAdminNotice;
                         } else {
                             document.getElementById('popup-live-admin-notice').innerText = "📢 নোটিশ: আজ কোনো নতুন নোটিশ নেই, নিয়মিত টাস্ক কমপ্লিট করুন।";
                         }
 
-                        // পেজ ওপেন হওয়ার পর ১ সেকেন্ড পর পপআপ শো হবে
+                        // আল্ট্রা স্মুথ পপআপ এন্ট্র্যান্স
                         setTimeout(() => {
                             document.getElementById('tg-popup-overlay').classList.add('show');
-                        }, 1000);
+                        }, 800);
 
                         const notifBadge = document.getElementById('notif-badge');
                         const count = parseInt(data.notification_count || 0);
@@ -557,11 +567,20 @@
             window.location.href = url;
         };
 
+        // --- 🔥 ডাবল সাবমিশন ফিক্সড ক্লিক মেকানিজম ---
         window.handleTaskClick = (taskId) => {
+            if (isTaskNavigating) return; // অলরেডি ক্লিক করা থাকলে ২য় ক্লিক ব্লক হবে
+            isTaskNavigating = true; 
+
             if (!isUserVerified) {
                 navigateTo('verifiednow.html');
+                isTaskNavigating = false;
             } else {
-                navigateTo(`taskd.html?id=${taskId}`);
+                loader.style.display = 'flex';
+                // এক সেকেন্ডের সিকিউরিটি হোল্ড দিয়ে নিয়ে যাওয়া হচ্ছে যাতে বাটন ডাবল ক্লিক না হয়
+                setTimeout(() => {
+                    window.location.href = `taskd.html?id=${taskId}`;
+                }, 100);
             }
         };
 
@@ -579,6 +598,7 @@
             } catch(e) { console.error(e); } finally { if(showLoader) loader.style.display = 'none'; }
         }
 
+        // --- ⚡ স্মার্ট ক্যাশিং ইঞ্জিন (ইউজারের ফোনে ডাটা সেভ থাকবে এবং এডমিন প্যানেল অনুযায়ী অটো চেঞ্জ হবে) ---
         async function syncTasksOnly(showLoader = true) {
             if(showLoader) loader.style.display = 'flex';
             try {
@@ -614,12 +634,15 @@
                     });
                 });
 
+                // ইউজারের ফোন মেমোরিতে নতুন ডাটা আপডেট ও সেভ করা হচ্ছে
+                localStorage.setItem('local_cached_tasks', JSON.stringify(validTasks));
+                
+                // লাইভ স্ক্রিনে রেন্ডার
                 renderTasks(validTasks);
 
             } catch(e) { console.error(e); } finally { if(showLoader) loader.style.display = 'none'; }
         }
 
-        // --- 🚀 নতুন প্রিমিয়াম লাক্সারি টাস্ক বক্স রেন্ডারিং ইঞ্জিন ---
         function renderTasks(tasks) {
             const container = document.getElementById('task-container');
             container.innerHTML = '';
